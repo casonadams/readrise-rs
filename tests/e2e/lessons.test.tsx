@@ -92,6 +92,7 @@ async function playLesson(viewport: Viewport, index: number): Promise<App> {
     width: viewport.width,
     height: viewport.height,
     reducedMotion: true,
+    clock: {},
     storage: { "progress.v1": progressBefore(statesOfMatter, index) },
   });
   await app.press(`label:${lesson.title}, start here`);

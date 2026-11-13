@@ -22,8 +22,8 @@ The `nsh` and `bun` versions are pinned in `mise.toml`.
 
     mise install
     nsh check                         # type check
-    nsh test                          # every *.test.ts(x)
-    bun scripts/layout-lint.ts        # layout lint over tests/ (or pass test files)
+    bun scripts/test.ts               # every test file in parallel, plus the layout lint (~10 s)
+    nsh test tests/screens/quiz.test.tsx   # one file
     nsh run --target web              # or macos, ios, android
 
 ## Tests
@@ -37,5 +37,7 @@ The `nsh` and `bun` versions are pinned in `mise.toml`.
 
 `app.shows(selector)` is true only for a view with an area, inside the window and every view that clips it, or in
 scroll content the user can reach, so a cropped, collapsed or off-screen element fails its test.
-`scripts/layout-lint.ts` reads the layout `nsh test --trace` prints and reports what assertions cannot see: text
-larger than its box, views clipped by or spilling out of their parent, views off screen, collapsed canvases.
+`scripts/test.ts` runs each test file in its own `nsh test --trace`, in parallel, and reads the layout the trace prints
+to report what assertions cannot see: text larger than its box, views clipped by or spilling out of their parent,
+views off screen, collapsed canvases. Screen tests use a manual clock (`clock: {}`), so waits and animations take no
+real time.

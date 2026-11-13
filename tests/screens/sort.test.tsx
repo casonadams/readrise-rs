@@ -1,8 +1,9 @@
 import { describe, expect, open, test } from "nsh/test";
+import { openLessonActivity } from "../support/open";
 import type { App } from "nsh/test";
 import { statesOfMatter } from "../../src/science/course";
 import type { ScienceActivity } from "../../src/science/types";
-import { type Viewport, viewports } from "../support/viewports";
+import { viewports } from "../support/viewports";
 
 type Sort = Extract<ScienceActivity, { kind: "sort" }>;
 
@@ -25,15 +26,6 @@ function expectShown(app: App, selectors: readonly string[]): void {
   expect(selectors.filter((s) => !app.shows(s))).toEqual([]);
 }
 
-async function openActivity(viewport: Viewport, lesson: number, activity: number): Promise<App> {
-  const params = { screen: "lesson-activity", lesson, activity };
-  return open("../support/harness.tsx", {
-    width: viewport.width,
-    height: viewport.height,
-    reducedMotion: true,
-    host: { params },
-  });
-}
 
 /** A learner asks for the hint, drops the first item in the wrong box, then places every item in its right box. */
 async function walkSort(app: App, sort: Sort): Promise<void> {
@@ -76,6 +68,7 @@ async function walkSort(app: App, sort: Sort): Promise<void> {
 
 test("a wrong sort box shows the rule, and finishing reports the result", async () => {
   const app = await open("../support/harness.tsx", {
+    clock: {},
     host: { params: { screen: "fixture-activity", activity: "sort" } },
   });
   expect(app.texts()).toContain("Where does each one go?");
@@ -95,7 +88,7 @@ for (const viewport of viewports) {
   describe(viewport.name, () => {
     for (const c of sorts) {
       test(`${c.title}: hint, wrong box and every placed chip stay on screen`, async () => {
-        const app = await openActivity(viewport, c.lesson, c.activity);
+        const app = await openLessonActivity(viewport, c.lesson, c.activity);
         await walkSort(app, c.sort);
       }, 60000);
     }

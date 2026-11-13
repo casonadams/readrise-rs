@@ -208,8 +208,8 @@ export class ParticleSim {
       p.x += p.vx * dt;
       p.y += p.vy * dt;
     }
-    this.bounceOffWalls();
     this.collide();
+    this.bounceOffWalls();
   }
 
   private keepInside(): void {

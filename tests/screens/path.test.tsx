@@ -9,7 +9,7 @@ const savedAfterMatter = {
 };
 
 test("a new learner can start the first lesson and the rest are locked", async () => {
-  const app = await open("../../App.tsx");
+  const app = await open("../../App.tsx", { clock: {} });
   expect(app.texts()).toContain("States of Matter");
   expect(app.texts()).toContain("GRADE 6");
   expect(app.count("label:Matter, start here")).toBe(1);
@@ -19,7 +19,7 @@ test("a new learner can start the first lesson and the rest are locked", async (
 });
 
 test("saved progress shows stars, XP and the streak, and opens the following lesson", async () => {
-  const app = await open("../../App.tsx", { storage: { "progress.v1": JSON.stringify(savedAfterMatter) } });
+  const app = await open("../../App.tsx", { clock: {}, storage: { "progress.v1": JSON.stringify(savedAfterMatter) } });
   await app.waitFor("label:30 XP");
   expect(app.count("label:Matter, 2 of 3 stars")).toBe(1);
   expect(app.count("label:States, start here")).toBe(1);
@@ -27,13 +27,13 @@ test("saved progress shows stars, XP and the streak, and opens the following les
 });
 
 test("a locked lesson says what to finish first", async () => {
-  const app = await open("../../App.tsx");
+  const app = await open("../../App.tsx", { clock: {} });
   await app.press("label:Heat, locked");
   await app.waitFor("text:Finish States first.");
 });
 
 test("opening a lesson starts at its first step, and leaving before any answer goes straight back", async () => {
-  const app = await open("../../App.tsx");
+  const app = await open("../../App.tsx", { clock: {} });
   await app.press("label:Matter, start here");
   await app.waitFor("label:Step 1 of 6");
   await app.press("label:Leave lesson");

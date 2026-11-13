@@ -1,5 +1,5 @@
-// Lints the screens `nsh test --trace` lays out: overflowing text, views clipped or off screen, collapsed canvases.
-// Usage: bun scripts/layout-lint.ts [test files...] (default: tests/**/*.test.tsx); LAYOUT_TRACE=file lints a saved trace.
+// Runs every test file in parallel under `nsh test --trace` and lints the screens they lay out (overflowing text,
+// views clipped or off screen, collapsed canvases). Usage: bun scripts/test.ts [test files...]; LAYOUT_TRACE=file lints a saved trace.
 
 interface Rect {
   x: number;
@@ -243,7 +243,25 @@ class Screen {
 async function testFiles(): Promise<string[]> {
   const given = process.argv.slice(2);
   if (given.length > 0) return given;
-  return (await Array.fromAsync(new Bun.Glob("tests/**/*.test.tsx").scan("."))).sort();
+  const found: string[] = [];
+  for (const root of ["src", "tests"]) {
+    found.push(...(await Array.fromAsync(new Bun.Glob(`${root}/**/*.test.{ts,tsx}`).scan("."))));
+  }
+  return found.sort();
+}
+
+/** Runs `work` over `items` with at most `limit` at a time, keeping the results in order. */
+async function pool<T, R>(items: readonly T[], limit: number, work: (item: T) => Promise<R>): Promise<R[]> {
+  const results: R[] = new Array(items.length);
+  let next = 0;
+  const lanes = Array.from({ length: Math.min(limit, items.length) }, async () => {
+    while (next < items.length) {
+      const i = next++;
+      results[i] = await work(items[i]);
+    }
+  });
+  await Promise.all(lanes);
+  return results;
 }
 
 async function trace(file: string): Promise<{ output: string; ok: boolean }> {
@@ -302,11 +320,10 @@ function lint(output: string): Map<string, Set<string>> {
 const saved = process.env.LAYOUT_TRACE;
 const runs = saved
   ? [{ file: saved, output: await Bun.file(saved).text(), ok: true }]
-  : await (async () => {
-      const out: { file: string; output: string; ok: boolean }[] = [];
-      for (const file of await testFiles()) out.push({ file, ...(await trace(file)) });
-      return out;
-    })();
+  : await pool(await testFiles(), Number(process.env.TEST_JOBS ?? navigator.hardwareConcurrency), async (file) => ({
+      file,
+      ...(await trace(file)),
+    }));
 
 let total = 0;
 let failed = false;
@@ -314,7 +331,13 @@ for (const run of runs) {
   if (!run.ok) {
     failed = true;
     console.error(`${run.file}: nsh test failed; the layout below covers the steps that ran.`);
+    const lines = run.output.split("\n");
+    lines.forEach((line, i) => {
+      if (line.startsWith("\u2717 ")) console.error(lines.slice(i, i + 4).join("\n"));
+    });
   }
+  const summary = run.output.split("\n").find((line) => / tests?: \d+ passed/.test(line));
+  console.log(`${run.file}: ${summary?.replace(/^\S+ /, "") ?? "no summary"}`);
   const found = lint(run.output);
   total += found.size;
   for (const [key, wheres] of found) {
@@ -323,5 +346,5 @@ for (const run of runs) {
     if (wheres.size > 3) console.log(`  ... and ${wheres.size - 3} more steps`);
   }
 }
-console.log(`\n${total} layout issue(s) in ${runs.length} test file(s)`);
+console.log(`\n${total} layout issue(s) in ${runs.length} test file(s)${failed ? "; some tests failed" : ""}`);
 process.exit(total > 0 || failed ? 1 : 0);

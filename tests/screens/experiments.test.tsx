@@ -111,6 +111,7 @@ for (const viewport of viewports) {
     for (const experiment of experiments) {
       test(`${experiment} shows its controls and parts at rest, and its result once observed`, async () => {
         const idle = await open("../support/harness.tsx", {
+          clock: {},
           width: viewport.width,
           height: viewport.height,
           reducedMotion: true,
@@ -120,6 +121,7 @@ for (const viewport of viewports) {
         expect(idle.shows("text:Observed 0")).toBe(true);
 
         const app = await open("../support/harness.tsx", {
+          clock: {},
           width: viewport.width,
           height: viewport.height,
           reducedMotion: true,

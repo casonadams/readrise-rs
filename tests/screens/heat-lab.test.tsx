@@ -1,4 +1,5 @@
 import { describe, expect, open, test } from "nsh/test";
+import { openLessonActivity } from "../support/open";
 import type { App } from "nsh/test";
 import { statesOfMatter } from "../../src/science/course";
 import type { ScienceActivity } from "../../src/science/types";
@@ -61,12 +62,7 @@ for (const viewport of viewports) {
       test(
         `${title}: every goal shows its prompt, readout, slider, particles and goal button`,
         async () => {
-          const app = await open("../support/harness.tsx", {
-            width: viewport.width,
-            height: viewport.height,
-            reducedMotion: true,
-            host: { params: { screen: "lesson-activity", lesson, activity } },
-          });
+          const app = await openLessonActivity(viewport, lesson, activity);
           const reach = viewport.width / 2 - 10;
           const total = lab.goals.length;
           for (const [i, goal] of lab.goals.entries()) {

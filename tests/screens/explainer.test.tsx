@@ -1,4 +1,5 @@
 import { describe, expect, open, test } from "nsh/test";
+import { openLessonActivity } from "../support/open";
 import type { App } from "nsh/test";
 import { changeName, waterStateAt } from "../../src/science/matter";
 import { statesOfMatter } from "../../src/science/course";
@@ -70,12 +71,7 @@ for (const viewport of viewports) {
       test(
         `${title}: "${explainer.title}" shows its caption, scene and buttons at every step`,
         async () => {
-          const app = await open("../support/harness.tsx", {
-            width: viewport.width,
-            height: viewport.height,
-            reducedMotion: true,
-            host: { params: { screen: "lesson-activity", lesson, activity } },
-          });
+          const app = await openLessonActivity(viewport, lesson, activity);
           const last = explainer.steps.length - 1;
           for (let step = 0; step <= last; step++) {
             await app.waitFor(`text:${explainer.steps[step]}`);
@@ -103,6 +99,7 @@ for (const viewport of viewports) {
 
 test("an explainer steps forward and back, and Continue finishes with no result", async () => {
   const app = await open("../support/harness.tsx", {
+    clock: {},
     host: { params: { screen: "fixture-activity", activity: "explainer" } },
   });
   expect(app.texts()).toContain("Melting");

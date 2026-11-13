@@ -1,8 +1,9 @@
 import { describe, expect, open, test } from "nsh/test";
+import { openLessonActivity } from "../support/open";
 import type { App } from "nsh/test";
 import { statesOfMatter } from "../../src/science/course";
 import type { ScienceActivity } from "../../src/science/types";
-import { type Viewport, viewports } from "../support/viewports";
+import { viewports } from "../support/viewports";
 
 type WhoIsRight = Extract<ScienceActivity, { kind: "whoIsRight" }>;
 
@@ -20,15 +21,6 @@ function expectShown(app: App, selectors: readonly string[]): void {
   expect(selectors.filter((s) => !app.shows(s))).toEqual([]);
 }
 
-async function openActivity(viewport: Viewport, lesson: number, activity: number): Promise<App> {
-  const params = { screen: "lesson-activity", lesson, activity };
-  return open("../support/harness.tsx", {
-    width: viewport.width,
-    height: viewport.height,
-    reducedMotion: true,
-    host: { params },
-  });
-}
 
 /** One claim tile: its label carries the verdict once a claim is marked. */
 function claimLabel(who: WhoIsRight, i: number, verdict: "open" | "wrong" | "right" | "dimmed"): string {
@@ -81,6 +73,7 @@ async function walkWhoIsRight(app: App, who: WhoIsRight): Promise<void> {
 
 test("a wrong claim names its speaker and explains the flaw", async () => {
   const app = await open("../support/harness.tsx", {
+    clock: {},
     host: { params: { screen: "fixture-activity", activity: "whoIsRight" } },
   });
   await app.press("label:Maya: No, it has no particles.");
@@ -97,7 +90,7 @@ for (const viewport of viewports) {
   describe(viewport.name, () => {
     for (const c of whoCases) {
       test(`${c.title}: every claim, every wrong reply and the right answer stay on screen`, async () => {
-        const app = await openActivity(viewport, c.lesson, c.activity);
+        const app = await openLessonActivity(viewport, c.lesson, c.activity);
         await walkWhoIsRight(app, c.who);
       }, 60000);
     }

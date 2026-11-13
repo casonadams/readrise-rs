@@ -109,6 +109,7 @@ for (const viewport of viewports) {
     for (const { name, spec, last } of scenes) {
       test(`the ${name} scene shows its parts at every step`, async () => {
         const app = await open("../support/harness.tsx", {
+          clock: {},
           width: viewport.width,
           height: viewport.height,
           reducedMotion: true,

@@ -1,4 +1,5 @@
 import { describe, expect, open, test } from "nsh/test";
+import { openLessonActivity } from "../support/open";
 import type { App } from "nsh/test";
 import type { PredictActivity } from "../../src/core/course";
 import { type Confidence, confidences, predictResult, predictResultText } from "../../src/core/sessions/predict";
@@ -96,6 +97,7 @@ async function walkPredict(app: App, p: Predict, pick: number, confidence: Confi
 
 test("a prediction is tested, revealed and worth its XP without a mistake", async () => {
   const app = await open("../support/harness.tsx", {
+    clock: {},
     host: { params: { screen: "fixture-activity", activity: "predict" } },
   });
   await app.press("text:Run it (cold)");
@@ -122,12 +124,7 @@ for (const viewport of viewports) {
       test(
         `${title}: a missed prediction shows the pick, the confidence row, the try-it panel and the result`,
         async () => {
-          const app = await open("../support/harness.tsx", {
-            width: viewport.width,
-            height: viewport.height,
-            reducedMotion: true,
-            host: { params: { screen: "lesson-activity", lesson, activity } },
-          });
+          const app = await openLessonActivity(viewport, lesson, activity);
           await walkPredict(app, predict, wrong, "Pretty sure", dragReach);
         },
         90000,
@@ -136,12 +133,7 @@ for (const viewport of viewports) {
       test(
         `${title}: a called prediction shows the result without the right-answer line`,
         async () => {
-          const app = await open("../support/harness.tsx", {
-            width: viewport.width,
-            height: viewport.height,
-            reducedMotion: true,
-            host: { params: { screen: "lesson-activity", lesson, activity } },
-          });
+          const app = await openLessonActivity(viewport, lesson, activity);
           await walkPredict(app, predict, predict.answer, "Totally sure", dragReach);
         },
         90000,

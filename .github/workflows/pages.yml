@@ -21,17 +21,10 @@ jobs:
       - uses: actions/checkout@v7
       - uses: jdx/mise-action@v5
       - run: nsh check
-      - run: nsh test
-
-  layout:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7
-      - uses: jdx/mise-action@v5
-      - run: bun scripts/layout-lint.ts
+      - run: bun scripts/test.ts
 
   deploy:
-    needs: [test, layout]
+    needs: test
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}

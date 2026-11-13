@@ -2,7 +2,7 @@ import { describe, expect, open, test } from "nsh/test";
 
 describe("lesson result", () => {
   const result = (outcome: { xp: number; mistakes: number }, next: string | null, streak = 0) =>
-    open("../support/harness.tsx", { reducedMotion: true, host: { params: { screen: "result", ...outcome, next, streak } } });
+    open("../support/harness.tsx", { clock: {}, reducedMotion: true, host: { params: { screen: "result", ...outcome, next, streak } } });
 
   test("a perfect lesson shows three stars and offers the next lesson", async () => {
     const app = await result({ xp: 45, mistakes: 0 }, "States", 3);

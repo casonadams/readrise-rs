@@ -1,9 +1,10 @@
 import { describe, expect, open, test } from "nsh/test";
+import { openLessonActivity } from "../support/open";
 import type { App } from "nsh/test";
 import { statesOfMatter } from "../../src/science/course";
 import type { ScienceActivity } from "../../src/science/types";
 import { activityKinds } from "../../src/ui/kit/theme";
-import { type Viewport, viewports } from "../support/viewports";
+import { viewports } from "../support/viewports";
 
 type Quiz = Extract<ScienceActivity, { kind: "quiz" }>;
 type Question = Quiz["questions"][number];
@@ -30,15 +31,6 @@ function expectShown(app: App, selectors: readonly string[]): void {
   expect(selectors.filter((s) => !app.shows(s))).toEqual([]);
 }
 
-async function openActivity(viewport: Viewport, lesson: number, activity: number): Promise<App> {
-  const params = { screen: "lesson-activity", lesson, activity };
-  return open("../support/harness.tsx", {
-    width: viewport.width,
-    height: viewport.height,
-    reducedMotion: true,
-    host: { params },
-  });
-}
 
 type Status = "open" | "wrong" | "correct" | "dimmed";
 
@@ -175,6 +167,7 @@ async function walkFirstTry(app: App, quiz: Quiz): Promise<void> {
 
 test("a wrong quiz pick is explained, and finishing reports half XP", async () => {
   const app = await open("../support/harness.tsx", {
+    clock: {},
     host: { params: { screen: "fixture-activity", activity: "quiz" } },
   });
   expect(app.texts()).toContain("1 of 2");
@@ -193,6 +186,7 @@ test("a wrong quiz pick is explained, and finishing reports half XP", async () =
 
 test("a quiz reason is asked once the answer is right", async () => {
   const app = await open("../support/harness.tsx", {
+    clock: {},
     host: { params: { screen: "fixture-activity", activity: "quizReason" } },
   });
   await app.press("text:Yes");
@@ -210,13 +204,13 @@ for (const viewport of viewports) {
   describe(viewport.name, () => {
     for (const c of quizzes) {
       test(`${c.title}: every wrong answer, hint and reason is explained and stays on screen`, async () => {
-        const app = await openActivity(viewport, c.lesson, c.activity);
+        const app = await openLessonActivity(viewport, c.lesson, c.activity);
         await walkWithMistakes(app, c.quiz);
         expect(app.texts().some((t) => t.startsWith("done: "))).toBe(true);
       }, 60000);
 
       test(`${c.title}: a first-try right answer is praised and every choice stays on screen`, async () => {
-        const app = await openActivity(viewport, c.lesson, c.activity);
+        const app = await openLessonActivity(viewport, c.lesson, c.activity);
         await walkFirstTry(app, c.quiz);
         expect(app.texts().some((t) => t.startsWith("done: "))).toBe(true);
       }, 60000);
