@@ -19,7 +19,3 @@ export function starsFor(mistakes: number): 1 | 2 | 3 {
   if (mistakes === 0) return 3;
   return mistakes <= 2 ? 2 : 1;
 }
-
-export function lessonOutcome(results: readonly ActivityResult[]): ActivityResult {
-  return results.reduce((sum, r) => ({ xp: sum.xp + r.xp, mistakes: sum.mistakes + r.mistakes }), noResult);
-}

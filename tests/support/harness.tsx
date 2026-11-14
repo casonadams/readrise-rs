@@ -2,6 +2,7 @@ import { host, mount, signal, Text, View } from "nsh";
 import type { JSX } from "nsh/jsx-runtime";
 import { type Lesson, lessonId } from "../../src/core/course";
 import type { ActivityResult } from "../../src/core/scoring";
+import { startSession } from "../../src/core/session";
 import { statesOfMatter } from "../../src/courses/states-of-matter/course";
 import { statesOfMatterPack } from "../../src/courses/states-of-matter/pack";
 import type { ExperimentId, SceneSpec } from "../../src/courses/states-of-matter/types";
@@ -33,7 +34,16 @@ function InRunner<A>(props: { activity: A; render: (activity: A, complete: (r: A
   return (
     <If
       when={result()}
-      else={<LessonRunner lesson={lesson} renderActivity={props.render} onFinish={(r) => result.set(r)} onLeave={() => {}} />}
+      else={
+        <LessonRunner
+          lesson={lesson}
+          session={startSession("harness", 0)}
+          renderActivity={props.render}
+          onProgress={() => {}}
+          onFinish={(r) => result.set(r)}
+          onLeave={() => {}}
+        />
+      }
     >
       {(r) => <Done result={r()} />}
     </If>
@@ -126,13 +136,25 @@ function HeatLabHarness() {
   );
 }
 
+/** The runner over three stand-in steps, from a saved session when `index`, `xp` and `mistakes` are given. */
 function RunnerHarness() {
   const status = signal("running");
+  const saved = signal("nothing saved");
+  const params = host.params;
+  const session = {
+    ...startSession("fixture", 0),
+    index: Number(params.index ?? 0),
+    xp: Number(params.xp ?? 0),
+    mistakes: Number(params.mistakes ?? 0),
+  };
   return (
     <View class="flex-1">
       <Text>{status()}</Text>
+      <Text>{saved()}</Text>
       <LessonRunner
         lesson={fixtures.steps}
+        session={session}
+        onProgress={(s) => saved.set(`saved at ${s.index}: ${s.xp} xp, ${s.mistakes} mistakes`)}
         renderActivity={(step, complete) => (
           <View role="button" onPress={() => complete(step.result)} class="p-4">
             <Text>{`Finish ${step.name}`}</Text>

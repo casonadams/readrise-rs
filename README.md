@@ -10,7 +10,7 @@ Live web build: https://casonadams.github.io/readrise-rs/ (deployed by `.github/
 | `src/ui/` | Screens any course uses: the learning path, the lesson runner and result, the activity screens (`activities/`), shared pieces (`kit/`), and `CoursePack`, how a course plugs in |
 | `src/science/` | The science kit, for any science course: `scienceLesson` (the lesson arc as named slots), particle simulation and view, water rules, drawing helpers, the water molecule, the cast of classmates, the Science subject |
 | `src/courses/<id>/` | One course: its lessons as data (`lessons/`), its experiments, scenes and extra activities (`ui/`), and its `pack.tsx` |
-| `App.tsx` | Lists the installed course packs; navigation between the path and lessons; saves progress after each lesson |
+| `App.tsx` | Lists the installed course packs; navigation between the path and lessons; resumes a lesson in progress (`session.v1`) and saves progress after each lesson |
 
 Layers import downwards only: `core`, then `ui`, then kits like `src/science`, then courses; a course never imports
 another course, and a course's content (`course.ts` and what it imports) loads without `nsh`.

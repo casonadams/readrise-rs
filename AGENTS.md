@@ -27,9 +27,10 @@ the user asks otherwise.
   Never rename or remove one; add a new one instead. `ids.lock` and `items.lock` list every shipped id and
   `scripts/locks.ts` fails if one disappears or a new one is not added; every quiz question has an `id`, unique
   within its course.
-- Saved data lives under versioned keys (`progress.v1`). Only ever add fields, and read a missing field as its
-  default (`parseProgress`), so old saves keep loading; a change that cannot be additive needs a new key and a
-  migration.
+- Saved data lives under versioned keys: `progress.v1` (stars, XP, streak) and `session.v1` (the lesson in
+  progress, so a learner who leaves carries on at the same step and in the same order). Only ever add fields,
+  and read a missing field as its default (`parseProgress`), so old saves keep loading; a change that cannot be
+  additive needs a new key and a migration.
 
 ## Colours and dark mode
 

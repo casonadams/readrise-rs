@@ -3,8 +3,9 @@ import { createNavStack, NavPage, NavStack } from "nsh/base";
 import { attemptActivities } from "./src/core/attempt";
 import { Catalog } from "./src/core/catalog";
 import type { CourseId, LessonId } from "./src/core/course";
-import { localDay, recordLesson, streakOn } from "./src/core/progress";
+import { lessonKey, localDay, recordLesson, streakOn } from "./src/core/progress";
 import type { ActivityResult } from "./src/core/scoring";
+import { type LessonSession, resumeOrStart } from "./src/core/session";
 import { statesOfMatterPack } from "./src/courses/states-of-matter/pack";
 import type { CoursePack } from "./src/ui/course-pack";
 import { SubjectColor } from "./src/ui/kit/theme";
@@ -12,6 +13,7 @@ import { LessonResult } from "./src/ui/lesson-result";
 import { LessonRunner } from "./src/ui/lesson-runner";
 import { PathScreen } from "./src/ui/path-screen";
 import { createProgressStore } from "./src/ui/progress-store";
+import { sessionStore } from "./src/ui/session-store";
 
 type Route = { readonly name: "path" } | { readonly name: "lesson"; readonly courseId: CourseId; readonly lessonId: LessonId };
 
@@ -24,10 +26,15 @@ const today = () => localDay(new Date());
 
 function LessonPage(props: { courseId: CourseId; lessonId: LessonId }) {
   const { course, lesson } = catalog.lesson(props.courseId, props.lessonId);
-  const attempt = { ...lesson, activities: attemptActivities(lesson, Date.now()) };
+  const key = lessonKey(course, lesson);
+  const session = signal<LessonSession | null>(null);
+  void sessionStore
+    .load()
+    .then((saved) => session.set(resumeOrStart(saved, key, lesson.activities.length, Date.now())));
   const outcome = signal<ActivityResult | null>(null);
   const finish = (result: ActivityResult) => {
     outcome.set(result);
+    void sessionStore.clear(key);
     void store.save(recordLesson(store.progress(), course, lesson, result, today()));
   };
   const next = () => catalog.nextUp(store.progress(), course.subject.id);
@@ -36,12 +43,18 @@ function LessonPage(props: { courseId: CourseId; lessonId: LessonId }) {
       <If
         when={outcome()}
         else={
-          <LessonRunner
-            lesson={attempt}
-            renderActivity={packs[catalog.courses.indexOf(course)].renderActivity}
-            onFinish={finish}
-            onLeave={() => nav.pop()}
-          />
+          <If when={session()}>
+            {(start) => (
+              <LessonRunner
+                lesson={{ ...lesson, activities: attemptActivities(lesson, start().seed) }}
+                session={start()}
+                renderActivity={packs[catalog.courses.indexOf(course)].renderActivity}
+                onProgress={(next) => void sessionStore.save(next)}
+                onFinish={finish}
+                onLeave={() => nav.pop()}
+              />
+            )}
+          </If>
         }
       >
         {(result) => (

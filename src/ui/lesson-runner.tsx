@@ -2,7 +2,8 @@ import { signal, Text, View } from "nsh";
 import { AlertDialog } from "nsh/base";
 import type { JSX } from "nsh/jsx-runtime";
 import type { Lesson } from "../core/course";
-import { type ActivityResult, lessonOutcome } from "../core/scoring";
+import type { ActivityResult } from "../core/scoring";
+import { advanceSession, type LessonSession } from "../core/session";
 import { SubjectColor } from "./kit/theme";
 
 function Segments(props: { total: number; done: number }) {
@@ -23,28 +24,36 @@ function Segments(props: { total: number; done: number }) {
 }
 
 /**
- * Plays a lesson's activities in order and sums their results; `onFinish` gets the lesson's outcome.
- * Leaving after the first activity asks first, since the lesson's progress would be lost.
+ * Plays a lesson's activities in order from `session`, summing their results: `onProgress` gets the session after
+ * each activity, `onFinish` the lesson's outcome. Leaving after the first activity asks first.
  */
 export function LessonRunner<A>(props: {
   lesson: Lesson<A>;
+  session: LessonSession;
   renderActivity: (activity: A, complete: (result: ActivityResult) => void) => JSX.Element;
+  onProgress: (session: LessonSession) => void;
   onFinish: (outcome: ActivityResult) => void;
   onLeave: () => void;
 }) {
-  const index = signal(0);
-  const results: ActivityResult[] = [];
+  const session = signal(props.session);
+  const index = () => session().index;
+  let finished = false;
   const complete = (at: number) => (result: ActivityResult) => {
-    if (at !== index() || results.length > at) return;
-    results.push(result);
-    if (at + 1 < props.lesson.activities.length) index.set(at + 1);
-    else props.onFinish(lessonOutcome(results));
+    if (at !== index() || finished) return;
+    const step = advanceSession(session(), result, props.lesson.activities.length);
+    if ("outcome" in step) {
+      finished = true;
+      props.onFinish(step.outcome);
+    } else {
+      session.set(step.session);
+      props.onProgress(step.session);
+    }
   };
   const leave = async () => {
     if (index() === 0) return props.onLeave();
     const choice = await AlertDialog.show({
       title: "Leave this lesson?",
-      description: "Your progress in this lesson will be lost.",
+      description: "Next time, you will start again at this step.",
       actions: [
         { id: "stay", label: "Keep going", role: "cancel" },
         { id: "leave", label: "Leave", role: "destructive" },

@@ -131,8 +131,30 @@ async function playLesson(viewport: Viewport, index: number): Promise<App> {
     await play(app, activity, viewport.width / 2 - 10);
   }
   await app.waitFor("label:Back to the path");
+  expect(app.storage()["session.v1"]).toBeUndefined();
   return app;
 }
+
+test("a lesson left halfway carries on at the same step", async () => {
+  const index = 2;
+  const lesson: ScienceLesson = statesOfMatter.lessons[index];
+  const app = await open("../../App.tsx", {
+    reducedMotion: true,
+    clock: {},
+    storage: { "progress.v1": progressBefore(statesOfMatter, index) },
+  });
+  await app.press(`label:${lesson.title}, start here`);
+  for (const activity of lesson.activities.slice(0, 2)) await play(app, activity, 150);
+  await app.waitFor(`label:Step 3 of ${lesson.activities.length}`);
+  app.onDialog(() => "Leave");
+  await app.press("label:Leave lesson");
+  await app.waitFor(`label:${lesson.title}, start here`);
+  await app.press(`label:${lesson.title}, start here`);
+  await app.waitFor(`label:Step 3 of ${lesson.activities.length}`);
+  for (const activity of lesson.activities.slice(2)) await play(app, activity, 150);
+  await app.waitFor("label:Back to the path");
+  expect(app.storage()["session.v1"]).toBeUndefined();
+}, 60000);
 
 for (const viewport of viewports) {
   describe(viewport.name, () => {
