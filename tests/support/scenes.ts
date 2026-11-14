@@ -63,6 +63,7 @@ export async function expectScene(app: App, scene: AnySceneSpec, step: number): 
       return;
     }
   }
+  throw new Error(`no expectations for the scene ${JSON.stringify(scene)}: add them here`);
 }
 
 function expectMixturesScene(app: App, scene: MixturesScene): void {

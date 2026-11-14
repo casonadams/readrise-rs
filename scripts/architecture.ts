@@ -18,7 +18,7 @@ interface Module {
 const importPattern = /^\s*(?:import|export)\s+(type\s+)?(?:[^'"]*?\s+from\s+)?["']([^"']+)["']/gm;
 
 function placeOf(path: string): { layer: Layer; home: string } {
-  if (path === "App.tsx") return { layer: "app", home: "" };
+  if (path === "App.tsx" || path.startsWith("src/app/")) return { layer: "app", home: "" };
   if (path.startsWith("tests/")) return { layer: "tests", home: "tests" };
   if (path.startsWith("src/core/")) return { layer: "core", home: "src/core" };
   if (path.startsWith("src/ui/")) return { layer: "ui", home: "src/ui" };

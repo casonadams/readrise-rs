@@ -1,16 +1,21 @@
 import { describe, expect, open, test } from "nsh/test";
 import type { App } from "nsh/test";
 import type { AnyActivity, Choice, Course } from "../../src/core/course";
-import { mixturesAndSolutions } from "../../src/courses/mixtures-and-solutions/course";
 import type { MixturesActivity } from "../../src/courses/mixtures-and-solutions/types";
 import { statesOfMatter } from "../../src/courses/states-of-matter/course";
 import type { ScienceActivity, ScienceLesson } from "../../src/courses/states-of-matter/types";
+import { installedPacks } from "../../src/app/installed";
 import { rightOf, wrongOf } from "../support/choices";
-import type { AnyExperimentId } from "../support/installed";
+import { type AnyExperimentId, installedExperiments } from "../support/installed";
 import { type Viewport, viewports } from "../support/viewports";
+import { reachState } from "../support/heat-lab";
 
-/** The courses in the order App.tsx installs them. */
-const installed: readonly Course<AnyActivity>[] = [statesOfMatter, mixturesAndSolutions];
+/** The courses in the order the app installs them. */
+const installed: readonly Course<AnyActivity>[] = installedPacks.map((p) => p.course);
+
+/** The activities `play` knows; it throws for any other kind, so a new course's own kinds fail here, not silently. */
+type Playable = ScienceActivity | MixturesActivity;
+const playable = installed as readonly Course<Playable>[];
 
 /** Saved progress with every lesson before `course`'s `lessonIndex`-th starred, earlier courses included. */
 function progressBefore(course: Course<AnyActivity>, lessonIndex: number): string {
@@ -36,24 +41,9 @@ const experimentSteps: Record<AnyExperimentId, (app: App) => Promise<void>> = {
   },
 };
 
-const goalButton = () => "label:/^(Goal reached! Next goal|Finish)$/";
-
-const targetCelsius: Record<string, number> = { solid: -15, liquid: 40, gas: 110 };
-
-function celsiusShown(app: App): number {
-  const reading = app.texts().find((t) => /^-?\d+\u00B0C/.test(t));
-  if (reading === undefined) throw new Error("no temperature on screen");
-  return parseInt(reading, 10);
-}
-
-/** Slider drags move the value relative to where it is; the slider settles a moment after the finger lifts. */
-async function reachState(app: App, target: string, reach: number): Promise<void> {
-  for (let i = 0; i < 20 && app.count(goalButton()) === 0; i++) {
-    const gap = targetCelsius[target] - celsiusShown(app);
-    await app.drag("label:Water temperature", { x: Math.max(-reach, Math.min(reach, gap * 2)) });
-    await app.wait(250);
-  }
-}
+test("every installed experiment has steps that run it", () => {
+  expect(installedExperiments().filter((e) => experimentSteps[e.experiment] === undefined)).toEqual([]);
+});
 
 type Quiz = Extract<ScienceActivity, { kind: "quiz" }>;
 type Sort = Extract<ScienceActivity, { kind: "sort" }>;
@@ -130,6 +120,8 @@ async function play(app: App, activity: ScienceActivity | MixturesActivity, reac
       }
       return;
   }
+  const unknown: AnyActivity = activity;
+  throw new Error(`play has no steps for a ${unknown.kind} activity`);
 }
 
 async function playLesson(viewport: Viewport, course: Course<ScienceActivity | MixturesActivity>, index: number) {
@@ -193,7 +185,7 @@ test("a lesson left halfway carries on at the same step", async () => {
 
 for (const viewport of viewports) {
   describe(viewport.name, () => {
-    for (const course of [statesOfMatter, mixturesAndSolutions]) {
+    for (const course of playable) {
       course.lessons.forEach((lesson, index) => {
         test(`plays ${course.title}, ${lesson.title} to the end and saves a star`, async () => {
           const app = await playLesson(viewport, course, index);

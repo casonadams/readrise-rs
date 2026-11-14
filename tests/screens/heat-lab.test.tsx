@@ -4,10 +4,7 @@ import { openLessonActivity } from "../support/open";
 import type { App } from "nsh/test";
 import type { HeatLabActivity } from "../../src/courses/states-of-matter/types";
 import { viewports } from "../support/viewports";
-
-const goalButton = "label:/^(Goal reached! Next goal|Finish)$/";
-
-const targetCelsius: Record<string, number> = { solid: -15, liquid: 40, gas: 110 };
+import { goalButton, reachState } from "../support/heat-lab";
 
 const heatLabs = activitiesOf<HeatLabActivity>("heatLab");
 
@@ -16,21 +13,6 @@ function readout(app: App): string {
   const line = app.texts().find((t) => t.includes("\u2022"));
   if (line === undefined) throw new Error("no readout on screen");
   return line;
-}
-
-function celsiusShown(app: App): number {
-  const reading = app.texts().find((t) => /^-?\d+\u00B0C/.test(t));
-  if (reading === undefined) throw new Error("no temperature on screen");
-  return parseInt(reading, 10);
-}
-
-/** Slider drags move the value relative to where it is; the slider settles a moment after the finger lifts. */
-async function reachState(app: App, target: string, reach: number): Promise<void> {
-  for (let i = 0; i < 20 && app.count(goalButton) === 0; i++) {
-    const gap = targetCelsius[target] - celsiusShown(app);
-    await app.drag("label:Water temperature", { x: Math.max(-reach, Math.min(reach, gap * 2)) });
-    await app.wait(250);
-  }
 }
 
 test("a drag to liquid water shows the goal button; finishing every goal reports full XP", async () => {

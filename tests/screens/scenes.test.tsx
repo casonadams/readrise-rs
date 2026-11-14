@@ -1,5 +1,5 @@
 import { describe, expect, open, test } from "nsh/test";
-import type { AnySceneSpec } from "../support/installed";
+import { type AnySceneSpec, installedScenes } from "../support/installed";
 import { expectScene } from "../support/scenes";
 import { viewports } from "../support/viewports";
 
@@ -9,25 +9,18 @@ const heatStages = [
   { from: 100, to: 120 },
 ];
 
-const states = "states-of-matter";
-const mixtures = "mixtures-and-solutions";
+/** Every scene the installed courses' explainers show, with how many steps it has there. */
+const scenes = installedScenes().map((s) => ({ ...s, name: `${s.course}: ${s.scene.id} (${s.steps} steps)` }));
 
-/** Each scene the harness mounts, with its course and last step (the harness clamps "Next step" there). */
-const scenes: readonly { readonly course: string; readonly name: string; readonly spec: AnySceneSpec; readonly last: number }[] = [
-  { course: states, name: "matter", spec: { id: "matter" }, last: 3 },
-  { course: states, name: "waterMolecule", spec: { id: "waterMolecule" }, last: 4 },
-  { course: states, name: "states", spec: { id: "states" }, last: 4 },
-  { course: states, name: "heat", spec: { id: "heat", stages: heatStages }, last: heatStages.length - 1 },
-  { course: states, name: "evaporation", spec: { id: "evaporation" }, last: 3 },
-  { course: mixtures, name: "dissolving", spec: { id: "dissolving" }, last: 3 },
-  { course: mixtures, name: "meltOrDissolve", spec: { id: "meltOrDissolve" }, last: 3 },
-  { course: mixtures, name: "mass", spec: { id: "mass" }, last: 3 },
-  { course: mixtures, name: "spoons", spec: { id: "spoons" }, last: 4 },
-];
+const sceneParams = (course: string, scene: AnySceneSpec, steps: number) => ({ screen: "scene", course, scene, steps });
 
 describe("heat scene", () => {
   test("the heat scene names each change as the water moves through its stages", async () => {
-    const app = await open("../support/harness.tsx", { host: { params: { screen: "scene", scene: "heat" } }, clock: {} });
+    const heat = { id: "heat" as const, stages: heatStages };
+    const app = await open("../support/harness.tsx", {
+      host: { params: sceneParams("states-of-matter", heat, heatStages.length) },
+      clock: {},
+    });
     await app.wait(3000);
     expect(app.texts()).toContain("Melting");
     expect(app.texts()).toContain("0\u00B0C");
@@ -39,11 +32,11 @@ describe("heat scene", () => {
 });
 
 describe("scenes", () => {
-  for (const { course, name, last } of scenes) {
+  for (const { course, name, scene, steps } of scenes) {
     test(`the ${name} scene renders every step`, async () => {
-      const app = await open("../support/harness.tsx", { host: { params: { screen: "scene", course, scene: name } }, clock: {} });
+      const app = await open("../support/harness.tsx", { host: { params: sceneParams(course, scene, steps) }, clock: {} });
       expect(app.texts()).toContain("Step 0");
-      for (let step = 1; step <= last; step++) {
+      for (let step = 1; step < steps; step++) {
         await app.press("label:Next step");
         await app.wait(3000);
         expect(app.texts()).toContain(`Step ${step}`);
@@ -54,23 +47,23 @@ describe("scenes", () => {
 
 for (const viewport of viewports) {
   describe(viewport.name, () => {
-    for (const { course, name, spec, last } of scenes) {
+    for (const { course, name, scene, steps } of scenes) {
       test(`the ${name} scene shows its parts at every step`, async () => {
         const app = await open("../support/harness.tsx", {
           clock: {},
           width: viewport.width,
           height: viewport.height,
           reducedMotion: true,
-          host: { params: { screen: "scene", course, scene: name } },
+          host: { params: sceneParams(course, scene, steps) },
         });
         await app.waitFor("text:Step 0");
         await app.wait(1200);
-        await expectScene(app, spec, 0);
-        for (let step = 1; step <= last; step++) {
+        await expectScene(app, scene, 0);
+        for (let step = 1; step < steps; step++) {
           await app.press("label:Next step");
           await app.waitFor(`text:Step ${step}`);
           await app.wait(1200);
-          await expectScene(app, spec, step);
+          await expectScene(app, scene, step);
         }
       }, 90000);
     }

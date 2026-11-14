@@ -2,16 +2,12 @@ import { describe, expect, open, test } from "nsh/test";
 import type { App } from "nsh/test";
 import type { ExperimentId as MixturesExperiment } from "../../src/courses/mixtures-and-solutions/types";
 import type { ExperimentId as StatesExperiment } from "../../src/courses/states-of-matter/types";
-import type { AnyExperimentId } from "../support/installed";
+import { type AnyExperimentId, installedExperiments } from "../support/installed";
 import { viewports } from "../support/viewports";
 
-const states = "states-of-matter";
-const mixtures = "mixtures-and-solutions";
-
-/** An experiment's course, its control (a button pressed `taps` times, or a slider), and what a learner sees of it
+/** An experiment's control (a button pressed `taps` times, or a slider), and what a learner sees of it
  * at rest and once it has reported its result. */
 interface ExperimentView {
-  readonly course: string;
   readonly control: string;
   readonly taps?: number;
   readonly before: readonly string[];
@@ -20,32 +16,27 @@ interface ExperimentView {
 
 const statesViews: Record<StatesExperiment, ExperimentView> = {
   balloon: {
-    course: states,
     control: "label:Pump",
     taps: 4,
     before: ["label:Pump", "label:Two balloons on a balance scale"],
     after: ["label:Two balloons on a balance scale", "text:Takes up space", "text:Has mass"],
   },
   zoom: {
-    course: states,
     control: "label:Zoom",
     before: ["label:Zoom", "label:A jar of air", "label:Particles in a gas"],
     after: ["text:Between particles: nothing at all"],
   },
   heatGas: {
-    course: states,
     control: "label:Heat",
     before: ["label:Heat", "label:Particles in a gas", "text:Speed: Slow", "text:Particle size: same"],
     after: ["text:Speed: Fast", "label:Particles in a gas"],
   },
   stove: {
-    course: states,
     control: "label:Stove",
     before: ["label:Stove", "label:Particles in a liquid", "text:20\u00B0C"],
     after: ["label:Particles in a gas", "text:The water itself is now a gas"],
   },
   evaporation: {
-    course: states,
     control: "label:Time",
     before: ["label:Time", "label:Particles in a gas", "label:Particles in a liquid", "text:In the glass: 30"],
     after: ["text:In the glass: 20", "text:In the air: 10"],
@@ -54,25 +45,21 @@ const statesViews: Record<StatesExperiment, ExperimentView> = {
 
 const mixturesViews: Record<MixturesExperiment, ExperimentView> = {
   dissolving: {
-    course: mixtures,
     control: "label:Stir",
     before: ["label:Stir", "label:Particles in a liquid", "text:Sugar: 12", "text:In the cube: 12"],
     after: ["text:In the cube: 0", "text:Hidden, not gone"],
   },
   meltOrDissolve: {
-    course: mixtures,
     control: "label:Time",
     before: ["label:Time", "text:Ice in a warm room", "text:Sugar in water", "text:Only water", "text:Water + sugar"],
     after: ["label:Particles in a liquid", "text:Only water", "text:Water + sugar"],
   },
   mass: {
-    course: mixtures,
     control: "label:Stir",
     before: ["label:Stir", "label:Scale reads 110 grams", "label:Particles in a liquid"],
     after: ["label:Scale reads 110 grams", "text:No particle left the glass"],
   },
   spoons: {
-    course: mixtures,
     control: "label:Add a spoon",
     taps: 6,
     before: ["label:Add a spoon", "text:Spoons: 0", "text:Dissolved: 0"],
@@ -82,11 +69,18 @@ const mixturesViews: Record<MixturesExperiment, ExperimentView> = {
 
 const views: Record<AnyExperimentId, ExperimentView> = { ...statesViews, ...mixturesViews };
 
-const experiments = Object.keys(views) as AnyExperimentId[];
-const sliders = experiments.filter((e) => views[e].taps === undefined);
+/** Every experiment the installed courses use, with its course. */
+const installed = installedExperiments();
+const experiments = installed.map((e) => e.experiment);
+const sliders = experiments.filter((e) => views[e]?.taps === undefined);
+const courseOf: Record<string, string> = Object.fromEntries(installed.map((e) => [e.experiment, e.course]));
 
 const harness = (experiment: AnyExperimentId, active: boolean) => ({
-  host: { params: { screen: "experiment", course: views[experiment].course, experiment, active } },
+  host: { params: { screen: "experiment", course: courseOf[experiment], experiment, active } },
+});
+
+test("every installed experiment has a control and what to look for", () => {
+  expect(experiments.filter((e) => views[e] === undefined)).toEqual([]);
 });
 
 /** Taps the button, or keeps dragging the slider (drags move it relative to where it is) until it has reported. */

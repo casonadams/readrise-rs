@@ -8,8 +8,14 @@ the user asks otherwise.
 
 - Layers import downwards only: `src/core` (the learning engine, no `nsh`), then `src/ui` (screens any course
   uses), then kits like `src/science` (parts any course of that subject uses), then courses in
-  `src/courses/<id>/`. A course never imports another course. `App.tsx` lists the installed `CoursePack`s and is
-  the only place that imports courses. `scripts/architecture.ts` enforces this; `bun scripts/test.ts` runs it.
+  `src/courses/<id>/`. A course never imports another course. `src/app/installed.ts` lists the installed
+  `CoursePack`s; it and `App.tsx` are the only places that import courses. `scripts/architecture.ts` enforces this;
+  `bun scripts/test.ts` runs it.
+- A course plugs in through its `pack.ts`: `coursePack(course, { renderExperiment, renderScene, renderVisual?,
+  ExtraView? })` (`src/ui/course-pack.tsx`). `ExtraView` draws the course's own activity kinds, and a lesson using a
+  kind it does not draw does not compile. Installing a course is one line in `src/app/installed.ts`: the app and
+  every screen and e2e test read that list, and a test fails until its experiments and scenes have expectations
+  (`tests/screens/experiments.test.tsx`, `tests/support/scenes.ts`, `tests/e2e/lessons.test.tsx`).
 - A course's content (`course.ts`, its lessons and what they import) loads without `nsh`: lessons are data, and
   experiments and scenes are named by id (`ExperimentId`, `SceneSpec`), drawn by the course's `ui/`.
 - Before writing a component, look in `src/ui/kit`, `src/ui/activities` and the subject's kit. Reuse in this order:

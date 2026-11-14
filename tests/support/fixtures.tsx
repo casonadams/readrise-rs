@@ -12,7 +12,7 @@ import {
   wrong,
 } from "../../src/core/course";
 import type { ActivityResult } from "../../src/core/scoring";
-import type { HeatLabActivity, HeatStage, SceneSpec } from "../../src/courses/states-of-matter/types";
+import type { HeatLabActivity } from "../../src/courses/states-of-matter/types";
 import type { RenderExperiment, RenderScene } from "../../src/ui/activities/types";
 
 export const quiz: QuizActivity = {
@@ -123,18 +123,6 @@ export const heatLab: HeatLabActivity = {
     { prompt: "Boil the water.", target: "gas" },
   ],
 };
-
-const heatStages: readonly HeatStage[] = [
-  { from: -20, to: 0 },
-  { from: 0, to: 100 },
-  { from: 100, to: 120 },
-];
-
-export function scene(name: string): SceneSpec {
-  if (name === "heat") return { id: "heat", stages: heatStages };
-  if (name === "matter" || name === "waterMolecule" || name === "states" || name === "evaporation") return { id: name };
-  throw new Error(`unknown scene: ${name}`);
-}
 
 type Step = { readonly kind: "step"; readonly name: string; readonly result: ActivityResult };
 

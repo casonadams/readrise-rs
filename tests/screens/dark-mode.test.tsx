@@ -1,6 +1,7 @@
 import { describe, expect, open, test } from "nsh/test";
 import type { ColorScheme } from "nsh/test";
 import { statesOfMatter } from "../../src/courses/states-of-matter/course";
+import { installedScenes } from "../support/installed";
 import { viewports } from "../support/viewports";
 
 const phone = viewports[1];
@@ -19,10 +20,17 @@ const heatLab = statesOfMatter.lessons
   .filter((at) => at.kind === "heatLab")
   .map(({ lesson, activity }) => ({ lesson, activity }))[0];
 
+/** The harness params that show the installed scene `id`, as its explainer does. */
+function sceneParams(id: string) {
+  const found = installedScenes().find((s) => s.scene.id === id);
+  if (found === undefined) throw new Error(`no installed scene ${id}`);
+  return { screen: "scene", course: found.course, scene: found.scene, steps: found.steps };
+}
+
 /** Science text drawn by the kit and the course: scene labels, a fact pill, the heat lab's notes. */
 const texts = [
-  { what: "a scene label", params: { screen: "scene", scene: "matter" }, steps: 1, text: "Rock" },
-  { what: "a fact pill", params: { screen: "scene", scene: "waterMolecule" }, steps: 2, text: "2 hydrogen" },
+  { what: "a scene label", params: sceneParams("matter"), steps: 1, text: "Rock" },
+  { what: "a fact pill", params: sceneParams("waterMolecule"), steps: 2, text: "2 hydrogen" },
   {
     what: "the heat lab's note",
     params: { screen: "lesson-activity", ...heatLab },

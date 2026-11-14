@@ -9,8 +9,9 @@ Live web build: https://casonadams.github.io/readrise-rs/ (deployed by `.github/
 | `src/core/` | Learning engine, no `nsh` imports: course model, scoring (XP, stars), progress and streaks, unlocks, the lesson arc rules (`rules.ts`), and the activity sessions (`sessions/`) |
 | `src/ui/` | Screens any course uses: the learning path, the lesson runner and result, the activity screens (`activities/`), shared pieces (`kit/`), and `CoursePack`, how a course plugs in |
 | `src/science/` | The science kit, for any science course: `scienceLesson` (the lesson arc as named slots), particle simulation and view, water rules, drawing helpers, the water molecule, the cast of classmates, the Science subject |
-| `src/courses/<id>/` | One course: its lessons as data (`lessons/`), its experiments, scenes and extra activities (`ui/`), and its `pack.tsx` |
-| `App.tsx` | Lists the installed course packs; navigation between the path and lessons; resumes a lesson in progress (`session.v1`) and saves progress after each lesson |
+| `src/courses/<id>/` | One course: its lessons as data (`lessons/`), its experiments, scenes and extra activities (`ui/`), and its `pack.ts` |
+| `src/app/installed.ts` | The installed course packs, in learning order: the one list the app and the tests read |
+| `App.tsx` | Navigation between the path and lessons; resumes a lesson in progress (`session.v1`) and saves progress after each lesson |
 
 Layers import downwards only: `core`, then `ui`, then kits like `src/science`, then courses; a course never imports
 another course, and a course's content (`course.ts` and what it imports) loads without `nsh`.
@@ -36,9 +37,9 @@ The `nsh` and `bun` versions are pinned in `mise.toml`.
 | Path | What it covers |
 | --- | --- |
 | `src/**/*.test.ts` | Pure logic next to its code: the learning engine, lesson rules, particle simulation |
-| `tests/screens/` | One file per screen. Behaviour with fixtures, then every real lesson activity of every course (`tests/support/installed.tsx`) at 375x667 and 390x844, asserting with `app.shows(...)` that everything a learner needs is on screen in every state |
+| `tests/screens/` | One file per screen. Behaviour with fixtures, then every real lesson activity, experiment and explainer scene of every installed course (`tests/support/installed.tsx`) at 375x667 and 390x844, asserting with `app.shows(...)` that everything a learner needs is on screen in every state |
 | `tests/e2e/` | Every lesson of every course played start to finish at both sizes; resuming a lesson; warm-ups reviewing hard questions |
-| `tests/support/` | Viewports, fixtures, and `harness.tsx`, the one test entry that mounts any screen by `host.params.screen` |
+| `tests/support/` | Viewports, fixtures, the heat lab drag helpers, and `harness.tsx`, the one test entry that mounts any screen by `host.params.screen` (experiments and scenes through their course's pack) |
 
 `app.shows(selector)` is true only for a view with an area, inside the window and every view that clips it, or in
 scroll content the user can reach, so a cropped, collapsed or off-screen element fails its test.
