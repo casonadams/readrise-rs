@@ -6,7 +6,7 @@ import { energyAt, waterStateAt } from "../../../science/matter";
 import type { ExperimentId } from "../types";
 import { fillCircle, fitStage } from "../../../science/ui/draw";
 import { ParticleView } from "../../../science/ui/particle-view";
-import { dartRound, mixHex, palette } from "../../../science/ui/palette";
+import { dartRound, ink, mixHex, palette } from "../../../science/ui/palette";
 import { ExperimentSlider, FactPill, Pop } from "../../../science/ui/parts";
 import { createTween, easeIn, easeOutBack, elasticOut } from "../../../science/ui/tween";
 
@@ -70,7 +70,7 @@ function Balloon(props: ExperimentProps) {
                   width: 12,
                   height: 12,
                   borderRadius: 6,
-                  backgroundColor: i < pumps() ? palette.hot : palette.outlineVariant,
+                  backgroundColor: i < pumps() ? palette.hot : ink.faint(),
                   transitionProperty: "backgroundColor",
                   transitionDuration: 200,
                 }}
@@ -98,7 +98,7 @@ function drawBalance(cx: CanvasRenderingContext2D, width: number, height: number
   cx.translate(margin, 0);
   const pivot: Point = { x: 160, y: 84 };
   const arm = { x: Math.cos(tilt) * 116, y: Math.sin(tilt) * 116 };
-  const metal = palette.onSurfaceVariant;
+  const metal = ink.muted();
 
   cx.fillStyle = metal;
   cx.beginPath();
@@ -127,7 +127,7 @@ function drawBalance(cx: CanvasRenderingContext2D, width: number, height: number
 /** A hanging pan; returns the middle of the surface it holds. */
 function drawPan(cx: CanvasRenderingContext2D, end: Point): Point {
   const rim = { x: end.x, y: end.y + 118 };
-  cx.strokeStyle = palette.outline;
+  cx.strokeStyle = ink.outline();
   cx.lineWidth = 2;
   cx.beginPath();
   cx.moveTo(end.x, end.y);
@@ -135,7 +135,7 @@ function drawPan(cx: CanvasRenderingContext2D, end: Point): Point {
   cx.moveTo(end.x, end.y);
   cx.lineTo(rim.x + 44, rim.y);
   cx.stroke();
-  cx.fillStyle = palette.onSurfaceVariant;
+  cx.fillStyle = ink.muted();
   fillCircle(cx, end.x, end.y, 4);
   cx.beginPath();
   cx.moveTo(rim.x - 44, rim.y);
@@ -249,7 +249,7 @@ function drawJar(cx: CanvasRenderingContext2D, width: number, height: number, op
   const x = (width - jarWidth) / 2;
   const y = (height - jarHeight) / 2;
   cx.globalAlpha = opacity;
-  cx.fillStyle = palette.onSurfaceVariant;
+  cx.fillStyle = ink.muted();
   cx.beginPath();
   cx.roundRect(x + jarWidth * 0.15, y, jarWidth * 0.7, 16, 6);
   cx.fill();
@@ -257,12 +257,12 @@ function drawJar(cx: CanvasRenderingContext2D, width: number, height: number, op
   cx.roundRect(x, y + 16, jarWidth, jarHeight - 16, [18, 18, 36, 36]);
   cx.fillStyle = "rgba(3, 169, 244, 0.08)";
   cx.fill();
-  cx.strokeStyle = palette.outline;
+  cx.strokeStyle = ink.outline();
   cx.lineWidth = 3;
   cx.stroke();
   cx.globalAlpha = 1;
   if (label) {
-    cx.fillStyle = palette.onSurfaceVariant;
+    cx.fillStyle = ink.muted();
     cx.font = "500 16px system-ui";
     cx.textAlign = "center";
     cx.textBaseline = "middle";

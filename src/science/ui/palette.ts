@@ -1,13 +1,17 @@
+import { token } from "nsh";
 import { type MatterState, minCelsius, maxCelsius } from "../matter";
 
-/** The Material colours the science visuals use (the Flutter originals' scheme, light). */
+/** The neutral colours of the science visuals, which follow the light or dark appearance (nsh.json "theme"). */
+export const ink = {
+  surface: () => token("science-surface"),
+  text: () => token("science-ink"),
+  muted: () => token("science-ink-muted"),
+  outline: () => token("science-outline"),
+  faint: () => token("science-outline-faint"),
+};
+
+/** The fixed colours of the science visuals: substances, heat and cold, charges, feedback. */
 export const palette = {
-  surface: "#FEF7FF",
-  surfaceLowest: "#FFFFFF",
-  outline: "#79747E",
-  outlineVariant: "#CAC4D0",
-  onSurface: "#1D1B20",
-  onSurfaceVariant: "#49454F",
   onPrimary: "#FFFFFF",
   error: "#B3261E",
   green: "#2E7D32",
@@ -71,7 +75,8 @@ export function withAlpha(hex: string, alpha: number): string {
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
+/** The red, green and blue of `#RRGGBB` or `#RRGGBBAA`; the alpha is ignored. */
 export function hexChannels(hex: string): [number, number, number] {
-  const n = parseInt(hex.slice(1), 16);
+  const n = parseInt(hex.slice(1, 7), 16);
   return [(n >> 16) & 0xff, (n >> 8) & 0xff, n & 0xff];
 }

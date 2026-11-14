@@ -1,10 +1,11 @@
 import { type CanvasRenderingContext2D, Canvas, effect, signal, Text, View } from "nsh";
+import type { JSX } from "nsh/jsx-runtime";
 import type { RenderScene } from "../../../ui/activities/types";
 import { SubjectColor } from "../../../ui/kit/theme";
 import { changeName, energyAt, type MatterState, speedWord, waterStateAt } from "../../../science/matter";
 import type { HeatStage, SceneSpec } from "../types";
 import { ParticleView } from "../../../science/ui/particle-view";
-import { dartRound, mixHex, palette, particleColor, stateName, temperatureColor, withAlpha } from "../../../science/ui/palette";
+import { dartRound, ink, mixHex, palette, particleColor, stateName, temperatureColor, withAlpha } from "../../../science/ui/palette";
 import { FactPill, Pop } from "../../../science/ui/parts";
 import { createTween, easeInOut } from "../../../science/ui/tween";
 import { WaterMolecule } from "../../../science/ui/water-molecule";
@@ -125,7 +126,7 @@ function Panel(props: {
         borderRadius: 24,
         borderWidth: 2,
         borderColor: withAlpha(props.color, 0.3),
-        backgroundColor: mixHex(palette.surfaceLowest, props.color, 0.08),
+        backgroundColor: mixHex(ink.surface(), props.color, 0.08),
         alignItems: "flex-start",
       }}
     >
@@ -150,35 +151,41 @@ function Panel(props: {
   );
 }
 
-function Property(props: { label: string; yes: boolean }) {
+/** A row: `leading`, then `label` in the science ink. */
+function LabelRow(props: { leading: JSX.Element; label: string; size: number; weight: "500" | "600"; gap: number }) {
   return (
-    <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-      <Text style={{ fontSize: 18, color: props.yes ? palette.green : palette.error }}>
-        {props.yes ? "\u2714" : "\u2716"}
-      </Text>
-      <Text style={{ fontSize: 14, fontWeight: "600", color: palette.onSurface }}>{props.label}</Text>
+    <View style={{ flexDirection: "row", alignItems: "center", gap: props.gap }}>
+      {props.leading}
+      <Text style={{ fontSize: props.size, fontWeight: props.weight, color: ink.text() }}>{props.label}</Text>
     </View>
   );
 }
 
+function Property(props: { label: string; yes: boolean }) {
+  const mark = (
+    <Text style={{ fontSize: 18, color: props.yes ? palette.green : palette.error }}>
+      {props.yes ? "\u2714" : "\u2716"}
+    </Text>
+  );
+  return <LabelRow leading={mark} label={props.label} size={14} weight="600" gap={6} />;
+}
+
 function ThingTile(props: { thing: Thing }) {
-  return (
-    <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-      <View
-        style={{
-          width: 48,
-          height: 48,
-          borderRadius: 14,
-          alignItems: "center",
-          justifyContent: "center",
-          backgroundColor: withAlpha(props.thing.color, 0.15),
-        }}
-      >
-        <Text style={{ fontSize: 26 }}>{props.thing.glyph}</Text>
-      </View>
-      <Text style={{ fontSize: 16, fontWeight: "500", color: palette.onSurface }}>{props.thing.label}</Text>
+  const glyph = (
+    <View
+      style={{
+        width: 48,
+        height: 48,
+        borderRadius: 14,
+        alignItems: "center",
+        justifyContent: "center",
+        backgroundColor: withAlpha(props.thing.color, 0.15),
+      }}
+    >
+      <Text style={{ fontSize: 26 }}>{props.thing.glyph}</Text>
     </View>
   );
+  return <LabelRow leading={glyph} label={props.thing.label} size={16} weight="500" gap={10} />;
 }
 
 const trioEnergy: Record<MatterState, number> = { solid: 0.3, liquid: 0.5, gas: 0.7 };
@@ -225,7 +232,7 @@ function StatesTrio(props: { arrangement: boolean }) {
           <View style={{ height: 4 }} />
           <View style={{ height: 44, width: "100%" }}>
             <Pop visible={props.arrangement} delay={150 * i}>
-              <Text style={{ fontSize: 14, textAlign: "center", color: palette.onSurface }}>
+              <Text style={{ fontSize: 14, textAlign: "center", color: ink.text() }}>
                 {arrangement[state]}
               </Text>
             </Pop>
@@ -352,14 +359,14 @@ function TrackNode(props: { state: MatterState; on: boolean }) {
         paddingVertical: 8,
         borderRadius: 999,
         borderWidth: 2,
-        borderColor: props.on ? color : palette.outlineVariant,
-        backgroundColor: props.on ? color : palette.surfaceLowest,
+        borderColor: props.on ? color : ink.faint(),
+        backgroundColor: props.on ? color : ink.surface(),
         transitionProperty: "all",
         transitionDuration: 300,
       }}
     >
       <Text
-        style={{ fontSize: 14, fontWeight: "600", color: props.on ? "#FFFFFF" : palette.onSurfaceVariant }}
+        style={{ fontSize: 14, fontWeight: "600", color: props.on ? "#FFFFFF" : ink.muted() }}
       >
         {stateName(props.state)}
       </Text>
@@ -369,7 +376,7 @@ function TrackNode(props: { state: MatterState; on: boolean }) {
 
 function TrackLink(props: { label: string | null; heating: boolean }) {
   const active = () => props.label !== null;
-  const colour = () => (active() ? (props.heating ? palette.hot : palette.cold) : palette.outlineVariant);
+  const colour = () => (active() ? (props.heating ? palette.hot : palette.cold) : ink.faint());
   return (
     <View style={{ flex: 1, alignItems: "center" }}>
       <View style={{ height: 18 }}>
@@ -415,7 +422,7 @@ function drawThermometer(cx: CanvasRenderingContext2D, width: number, height: nu
   const x = thermometerTubeX;
   const bulb = { x, y: bulbY };
 
-  cx.fillStyle = palette.outlineVariant;
+  cx.fillStyle = ink.faint();
   cx.beginPath();
   cx.roundRect(x - half, top, thermometerTubeWidth, bulbY - top, half);
   cx.fill();
@@ -437,13 +444,13 @@ function drawThermometer(cx: CanvasRenderingContext2D, width: number, height: nu
     [100, "100\u00B0"],
   ] as const) {
     const y = yAt(mark);
-    cx.strokeStyle = palette.onSurfaceVariant;
+    cx.strokeStyle = ink.muted();
     cx.lineWidth = 2;
     cx.beginPath();
     cx.moveTo(x + half + 2, y);
     cx.lineTo(x + half + 8, y);
     cx.stroke();
-    cx.fillStyle = palette.onSurfaceVariant;
+    cx.fillStyle = ink.muted();
     cx.font = "700 11px system-ui";
     cx.textAlign = "left";
     cx.textBaseline = "middle";

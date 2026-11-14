@@ -2,7 +2,7 @@ import { Canvas, cleanup, effect, reduceMotion, signal, untracked, View } from "
 import type { MatterState } from "../matter";
 import { ParticleSim } from "../particle-sim";
 import { fillCircle } from "./draw";
-import { hexChannels, palette, particleColor } from "./palette";
+import { hexChannels, ink, particleColor } from "./palette";
 
 /** How fast the colour eases toward a new state's colour (per second): it settles in about half a second. */
 const colourRate = 8;
@@ -45,7 +45,8 @@ export function ParticleView(props: { state: MatterState; energy: number }) {
     cleanup(() => cancelAnimationFrame(raf));
   });
 
-  const cssRgb = (c: Rgb, mix = 1, over = 0) => `rgb(${c.map((v) => Math.round(over + (v - over) * mix)).join(", ")})`;
+  const cssRgb = (c: Rgb, mix = 1, over: Rgb = c) =>
+    `rgb(${c.map((v, i) => Math.round(over[i] + (v - over[i]) * mix)).join(", ")})`;
 
   return (
     <View
@@ -55,8 +56,8 @@ export function ParticleView(props: { state: MatterState; energy: number }) {
         padding: 4,
         borderRadius: 20,
         borderWidth: 2,
-        borderColor: palette.outlineVariant,
-        backgroundColor: cssRgb(colour, 0.06, 255),
+        borderColor: ink.faint(),
+        backgroundColor: cssRgb(colour, 0.06, hexChannels(ink.surface())),
       }}
     >
       <Canvas

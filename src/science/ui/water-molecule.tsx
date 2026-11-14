@@ -1,6 +1,6 @@
 import { type CanvasRenderingContext2D, Canvas, cleanup, effect, reduceMotion, signal, Text, View } from "nsh";
 import { fillCircle, fitStage } from "./draw";
-import { mixHex, palette, withAlpha } from "./palette";
+import { ink, mixHex, palette, withAlpha } from "./palette";
 import { FactPill, Pop } from "./parts";
 import { createTween, easeInOutBack, easeOut } from "./tween";
 
@@ -86,7 +86,7 @@ export function WaterMolecule(props: { step: () => number }) {
         </View>
       </Pop>
       <Pop visible={props.step() >= 3}>
-        <Text style={{ fontSize: 36, fontWeight: "800", color: palette.onSurface }}>
+        <Text style={{ fontSize: 36, fontWeight: "800", color: ink.text() }}>
           {"H\u2082"}
           <Text style={{ color: palette.oxygen }}>O</Text>
         </Text>

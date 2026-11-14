@@ -1,7 +1,7 @@
 import { cleanup, effect, type JSX, signal, Text, View } from "nsh";
 import { Slider } from "nsh/base";
 import { SubjectColor } from "../../ui/kit/theme";
-import { mixHex, palette, withAlpha } from "./palette";
+import { ink, mixHex, withAlpha } from "./palette";
 
 /** Scales and fades its children in after `delay` ms once `visible` turns true, and out when it turns false. */
 export function Pop(props: { visible: boolean; delay?: number; children?: JSX.Element }) {
@@ -47,11 +47,11 @@ export function FactPill(props: { label: string; icon?: string; color?: string }
         borderRadius: 999,
         borderWidth: 1.5,
         borderColor: withAlpha(tint(), 0.35),
-        backgroundColor: mixHex(palette.surfaceLowest, tint(), 0.12),
+        backgroundColor: mixHex(ink.surface(), tint(), 0.12),
       }}
     >
       {props.icon ? <Text style={{ fontSize: 16, color: tint() }}>{props.icon}</Text> : null}
-      <Text style={{ fontSize: 14, fontWeight: "600", color: palette.onSurface }}>{props.label}</Text>
+      <Text style={{ fontSize: 14, fontWeight: "600", color: ink.text() }}>{props.label}</Text>
     </View>
   );
 }
@@ -65,7 +65,7 @@ export function ExperimentSlider(props: {
   high: string;
   color?: string;
 }) {
-  const tint = () => (props.onChange ? (props.color ?? SubjectColor()) : palette.outline);
+  const tint = () => (props.onChange ? (props.color ?? SubjectColor()) : ink.outline());
   return (
     <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
       <Text style={{ fontSize: 22, opacity: 0.6 }}>{props.low}</Text>
@@ -79,7 +79,7 @@ export function ExperimentSlider(props: {
         accessibilityLabel={props.label}
         onChange={({ value }) => props.onChange?.(value as number)}
         trackStyle={{ height: 32, justifyContent: "center" }}
-        indicatorStyle={{ height: 8, borderRadius: 4, backgroundColor: palette.outlineVariant }}
+        indicatorStyle={{ height: 8, borderRadius: 4, backgroundColor: ink.faint() }}
         rangeStyle={{ height: 8, borderRadius: 4, backgroundColor: tint() }}
         thumbStyle={{ width: 26, height: 26, borderRadius: 13, backgroundColor: tint() }}
       />

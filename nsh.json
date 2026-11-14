@@ -2,5 +2,23 @@
   "name": "Readrise",
   "id": "io.github.casonadams.readrise",
   "version": "1.0.0",
-  "build": 1
+  "build": 1,
+  "theme": {
+    "cssVars": {
+      "light": {
+        "science-surface": "#FFFFFF",
+        "science-ink": "#1D1B20",
+        "science-ink-muted": "#49454F",
+        "science-outline": "#79747E",
+        "science-outline-faint": "#CAC4D0"
+      },
+      "dark": {
+        "science-surface": "#18181B",
+        "science-ink": "#E6E0E9",
+        "science-ink-muted": "#CAC4D0",
+        "science-outline": "#938F99",
+        "science-outline-faint": "#49454F"
+      }
+    }
+  }
 }
