@@ -49,8 +49,10 @@ Every lesson after the first follows this order. Each step has a reason.
 | 6. Who's right? | `whoIsRight` | Classmates voice the misconception; the learner argues against it |
 
 The first lesson of a course skips the warm-up. Exactly one prediction per lesson, before the first explainer.
-`courseIssues` (`src/core/rules.ts`) checks the arc and the feedback rules below; each course's test requires it
-to find none.
+Write a science lesson with `scienceLesson({ warmUp, predict, explain, practise, check, debate })`
+(`src/science/lesson.ts`): one slot per step, so it cannot be built out of order. `courseIssues`
+(`src/core/rules.ts`) also checks the arc, and the feedback rules below; each course's test requires it to find
+none.
 
 ## Designing around misconceptions
 
