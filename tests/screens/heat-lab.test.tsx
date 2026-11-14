@@ -1,8 +1,8 @@
 import { describe, expect, open, test } from "nsh/test";
 import { openLessonActivity } from "../support/open";
 import type { App } from "nsh/test";
-import { statesOfMatter } from "../../src/science/course";
-import type { ScienceActivity } from "../../src/science/types";
+import { statesOfMatter } from "../../src/courses/states-of-matter/course";
+import type { ScienceActivity } from "../../src/courses/states-of-matter/types";
 import { viewports } from "../support/viewports";
 
 const goalButton = "label:/^(Goal reached! Next goal|Finish)$/";

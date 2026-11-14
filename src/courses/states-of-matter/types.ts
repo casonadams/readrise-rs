@@ -1,5 +1,5 @@
-import type { Activity, Lesson } from "../core/course";
-import type { MatterState } from "./matter";
+import type { Activity, Lesson } from "../../core/course";
+import type { MatterState } from "../../science/matter";
 
 export type ExperimentId = "balloon" | "zoom" | "heatGas" | "stove";
 

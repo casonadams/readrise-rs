@@ -1,8 +1,8 @@
 import { describe, expect, open, test } from "nsh/test";
 import type { App } from "nsh/test";
 import type { Course } from "../../src/core/course";
-import { statesOfMatter } from "../../src/science/course";
-import type { ExperimentId, ScienceActivity, ScienceLesson } from "../../src/science/types";
+import { statesOfMatter } from "../../src/courses/states-of-matter/course";
+import type { ExperimentId, ScienceActivity, ScienceLesson } from "../../src/courses/states-of-matter/types";
 import { type Viewport, viewports } from "../support/viewports";
 
 function progressBefore(course: Course<ScienceActivity>, lessonIndex: number): string {

@@ -1,5 +1,7 @@
-// Runs every test file in parallel under `nsh test --trace` and lints the screens they lay out (overflowing text,
-// views clipped or off screen, collapsed canvases). Usage: bun scripts/test.ts [test files...]; LAYOUT_TRACE=file lints a saved trace.
+// Checks the import rules between layers, then runs every test file in parallel under `nsh test --trace` and lints
+// the screens they lay out (overflowing text, views clipped or off screen, collapsed canvases).
+// Usage: bun scripts/test.ts [test files...]; LAYOUT_TRACE=file lints a saved trace.
+import { architectureIssues } from "./architecture";
 
 interface Rect {
   x: number;
@@ -317,6 +319,9 @@ function lint(output: string): Map<string, Set<string>> {
   return found;
 }
 
+const architecture = await architectureIssues();
+for (const issue of architecture) console.error(`architecture: ${issue}`);
+
 const saved = process.env.LAYOUT_TRACE;
 const runs = saved
   ? [{ file: saved, output: await Bun.file(saved).text(), ok: true }]
@@ -347,4 +352,5 @@ for (const run of runs) {
   }
 }
 console.log(`\n${total} layout issue(s) in ${runs.length} test file(s)${failed ? "; some tests failed" : ""}`);
-process.exit(total > 0 || failed ? 1 : 0);
+console.log(`${architecture.length} architecture issue(s)`);
+process.exit(total > 0 || failed || architecture.length > 0 ? 1 : 0);

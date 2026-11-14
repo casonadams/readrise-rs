@@ -7,14 +7,18 @@ Live web build: https://casonadams.github.io/readrise-rs/ (deployed by `.github/
 | Path | Role |
 | --- | --- |
 | `src/core/` | Learning engine, no `nsh` imports: course model, scoring (XP, stars), progress and streaks, unlocks, the lesson arc rules (`rules.ts`), and the activity sessions (`sessions/`) |
-| `src/science/` | The States of Matter course: lessons as data (`lessons/`), water and heat rules (`matter.ts`, `heat-lab.ts`) |
-| `src/science/ui/` | The course's experiments, explainer scenes, particle view and heat lab |
-| `src/ui/` | Screens: the learning path, the lesson runner and result, the activity screens (`activities/`) and shared pieces (`kit/`) |
-| `App.tsx` | Navigation between the path and lessons; saves progress after each lesson |
+| `src/ui/` | Screens any course uses: the learning path, the lesson runner and result, the activity screens (`activities/`), shared pieces (`kit/`), and `CoursePack`, how a course plugs in |
+| `src/science/` | The science kit, for any science course: particle simulation and view, water rules, drawing helpers, the water molecule, the cast of classmates, the Science subject |
+| `src/courses/<id>/` | One course: its lessons as data (`lessons/`), its experiments, scenes and extra activities (`ui/`), and its `pack.tsx` |
+| `App.tsx` | Lists the installed course packs; navigation between the path and lessons; saves progress after each lesson |
 
-Lessons are data: experiments and scenes are referenced by id (`ExperimentId`, `SceneSpec` in `src/science/types.ts`).
+Layers import downwards only: `core`, then `ui`, then kits like `src/science`, then courses; a course never imports
+another course, and a course's content (`course.ts` and what it imports) loads without `nsh`.
+`scripts/architecture.ts` checks this, and `bun scripts/test.ts` runs it first.
+
+Lessons are data: experiments and scenes are referenced by id (`ExperimentId`, `SceneSpec` in `src/courses/states-of-matter/types.ts`).
 `courseIssues` checks the lesson design rules (warm-up, one prediction before the first explainer, "Who's right?" last,
-feedback for every wrong choice); `src/science/science.test.ts` requires the course to have none.
+feedback for every wrong choice); `src/courses/states-of-matter/course.test.ts` requires the course to have none.
 
 ## Develop
 

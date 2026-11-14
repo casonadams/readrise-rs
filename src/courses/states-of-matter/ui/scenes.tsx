@@ -1,13 +1,13 @@
 import { type CanvasRenderingContext2D, Canvas, effect, signal, Text, View } from "nsh";
-import type { RenderScene } from "../../ui/activities/types";
-import { SubjectColor } from "../../ui/kit/theme";
-import { changeName, energyAt, type MatterState, speedWord, waterStateAt } from "../matter";
+import type { RenderScene } from "../../../ui/activities/types";
+import { SubjectColor } from "../../../ui/kit/theme";
+import { changeName, energyAt, type MatterState, speedWord, waterStateAt } from "../../../science/matter";
 import type { HeatStage, SceneSpec } from "../types";
-import { ParticleView } from "./particle-view";
-import { dartRound, mixHex, palette, particleColor, stateName, temperatureColor, withAlpha } from "./palette";
-import { FactPill, Pop } from "./parts";
-import { createTween, easeInOut } from "./tween";
-import { WaterMolecule } from "./water-molecule";
+import { ParticleView } from "../../../science/ui/particle-view";
+import { dartRound, mixHex, palette, particleColor, stateName, temperatureColor, withAlpha } from "../../../science/ui/palette";
+import { FactPill, Pop } from "../../../science/ui/parts";
+import { createTween, easeInOut } from "../../../science/ui/tween";
+import { WaterMolecule } from "../../../science/ui/water-molecule";
 
 /** The explainer scene for `scene`: a pure function of `step`, which animates between steps. */
 export const renderScene: RenderScene<SceneSpec> = (scene, step) => {

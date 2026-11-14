@@ -19,6 +19,7 @@ import { Shake } from "../kit/shake";
 import { StepDots } from "../kit/step-dots";
 import { TextAction } from "../kit/text-action";
 import { feedbackColors } from "../kit/theme";
+import { stepper } from "./step";
 import type { ActivityProps, RenderVisual } from "./types";
 
 const lastOf = (picks: readonly number[]): number | undefined => picks[picks.length - 1];
@@ -28,7 +29,7 @@ export function QuizView<V>(props: ActivityProps<QuizActivity<V>> & { renderVisu
   const state = signal<QuizState>(quizStart);
   const shakes = signal<Readonly<Record<string, number>>>({});
   const renderVisual = props.renderVisual;
-  let finished = false;
+  const apply = stepper(state, props.complete);
 
   const bump = (key: string) => shakes.update((s) => ({ ...s, [key]: (s[key] ?? 0) + 1 }));
   const current = () => currentQuestion(props.activity, state());
@@ -45,16 +46,7 @@ export function QuizView<V>(props: ActivityProps<QuizActivity<V>> & { renderVisu
     if (after.mistakes > before.mistakes) bump(`${before.index}:r${option}`);
     state.set(after);
   };
-  const advance = () => {
-    if (finished) return;
-    const step = nextQuestion(props.activity, state());
-    if ("result" in step) {
-      finished = true;
-      props.complete(step.result);
-    } else {
-      state.set(step.state);
-    }
-  };
+  const advance = () => apply(nextQuestion(props.activity, state()));
 
   const answerState = (q: ChoiceQuestion<V>, i: number): OptionState => {
     const s = state();

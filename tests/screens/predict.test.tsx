@@ -3,8 +3,8 @@ import { openLessonActivity } from "../support/open";
 import type { App } from "nsh/test";
 import type { PredictActivity } from "../../src/core/course";
 import { type Confidence, confidences, predictResult, predictResultText } from "../../src/core/sessions/predict";
-import { statesOfMatter } from "../../src/science/course";
-import type { ExperimentId, ScienceActivity } from "../../src/science/types";
+import { statesOfMatter } from "../../src/courses/states-of-matter/course";
+import type { ExperimentId, ScienceActivity } from "../../src/courses/states-of-matter/types";
 import { predictionTitle } from "../../src/ui/activities/predict";
 import { viewports } from "../support/viewports";
 

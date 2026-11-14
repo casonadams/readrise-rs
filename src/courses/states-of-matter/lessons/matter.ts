@@ -1,4 +1,4 @@
-import { leo, mia } from "../classmates";
+import { leo, mia } from "../../../science/classmates";
 import type { ScienceLesson } from "../types";
 
 // Is air matter? Targets "air weighs nothing" and "light is matter".

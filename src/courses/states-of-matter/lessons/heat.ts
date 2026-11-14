@@ -1,4 +1,4 @@
-import { noah, zoe } from "../classmates";
+import { noah, zoe } from "../../../science/classmates";
 import type { ScienceLesson } from "../types";
 
 // Temperature as particle speed. Targets "particles expand when heated".

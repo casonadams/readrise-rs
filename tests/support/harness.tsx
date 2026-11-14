@@ -2,12 +2,12 @@ import { host, mount, signal, Text, View } from "nsh";
 import type { JSX } from "nsh/jsx-runtime";
 import type { Lesson } from "../../src/core/course";
 import type { ActivityResult } from "../../src/core/scoring";
-import { statesOfMatter } from "../../src/science/course";
-import type { ExperimentId, SceneSpec } from "../../src/science/types";
-import { renderExperiment } from "../../src/science/ui/experiments";
-import { HeatLabView } from "../../src/science/ui/heat-lab-view";
-import { renderScene } from "../../src/science/ui/scenes";
-import { renderScienceActivity } from "../../src/ui/activities";
+import { statesOfMatter } from "../../src/courses/states-of-matter/course";
+import { statesOfMatterPack } from "../../src/courses/states-of-matter/pack";
+import type { ExperimentId, SceneSpec } from "../../src/courses/states-of-matter/types";
+import { renderExperiment } from "../../src/courses/states-of-matter/ui/experiments";
+import { HeatLabView } from "../../src/courses/states-of-matter/ui/heat-lab-view";
+import { renderScene } from "../../src/courses/states-of-matter/ui/scenes";
 import { ExplainerView } from "../../src/ui/activities/explainer";
 import { PredictView } from "../../src/ui/activities/predict";
 import { QuizView } from "../../src/ui/activities/quiz";
@@ -151,7 +151,7 @@ function screen(): JSX.Element {
   switch (params.screen) {
     case "lesson-activity": {
       const activity = statesOfMatter.lessons[Number(params.lesson)].activities[Number(params.activity)];
-      return <InRunner activity={activity} render={renderScienceActivity} />;
+      return <InRunner activity={activity} render={statesOfMatterPack.renderActivity} />;
     }
     case "fixture-activity":
       return fixtureActivity(String(params.activity));

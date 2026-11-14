@@ -1,6 +1,6 @@
 import { describe, expect, open, test } from "nsh/test";
 import type { App } from "nsh/test";
-import type { ExperimentId } from "../../src/science/types";
+import type { ExperimentId } from "../../src/courses/states-of-matter/types";
 import { viewports } from "../support/viewports";
 
 const experiments: readonly ExperimentId[] = ["balloon", "zoom", "heatGas", "stove"];

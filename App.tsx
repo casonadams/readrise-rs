@@ -3,9 +3,8 @@ import { createNavStack, NavPage, NavStack } from "nsh/base";
 import { Catalog } from "./src/core/catalog";
 import { localDay, recordLesson, streakOn } from "./src/core/progress";
 import type { ActivityResult } from "./src/core/scoring";
-import { statesOfMatter } from "./src/science/course";
-import type { ScienceActivity } from "./src/science/types";
-import { renderScienceActivity } from "./src/ui/activities";
+import { statesOfMatterPack } from "./src/courses/states-of-matter/pack";
+import type { CoursePack } from "./src/ui/course-pack";
 import { SubjectColor } from "./src/ui/kit/theme";
 import { LessonResult } from "./src/ui/lesson-result";
 import { LessonRunner } from "./src/ui/lesson-runner";
@@ -14,7 +13,9 @@ import { createProgressStore } from "./src/ui/progress-store";
 
 type Route = { readonly name: "path" } | { readonly name: "lesson"; readonly courseId: string; readonly lessonId: string };
 
-const catalog = new Catalog<ScienceActivity>([statesOfMatter]);
+/** The installed courses, in learning order. */
+const packs: readonly CoursePack[] = [statesOfMatterPack];
+const catalog = new Catalog(packs.map((p) => p.course));
 const store = createProgressStore();
 const nav = createNavStack<Route>([{ name: "path" }]);
 const today = () => localDay(new Date());
@@ -32,7 +33,12 @@ function LessonPage(props: { courseId: string; lessonId: string }) {
       <If
         when={outcome()}
         else={
-          <LessonRunner lesson={lesson} renderActivity={renderScienceActivity} onFinish={finish} onLeave={() => nav.pop()} />
+          <LessonRunner
+            lesson={lesson}
+            renderActivity={packs[catalog.courses.indexOf(course)].renderActivity}
+            onFinish={finish}
+            onLeave={() => nav.pop()}
+          />
         }
       >
         {(result) => (
@@ -54,7 +60,7 @@ function LessonPage(props: { courseId: string; lessonId: string }) {
 
 function App() {
   return (
-    <SubjectColor.Provider value={statesOfMatter.subject.color}>
+    <SubjectColor.Provider value={catalog.courses[0].subject.color}>
       <NavStack state={nav} class="flex-1">
         {(route) =>
           route.name === "path" ? (

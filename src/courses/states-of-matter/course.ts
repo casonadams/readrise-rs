@@ -1,5 +1,5 @@
-import type { Course } from "../core/course";
-import { science } from "../core/course";
+import type { Course } from "../../core/course";
+import { science } from "../../science/subject";
 import { changesLesson } from "./lessons/changes";
 import { heatLesson } from "./lessons/heat";
 import { matterLesson } from "./lessons/matter";

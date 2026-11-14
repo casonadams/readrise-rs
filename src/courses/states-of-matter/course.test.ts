@@ -1,9 +1,9 @@
 import { describe, expect, test } from "nsh/test";
-import { Catalog } from "../core/catalog";
-import { courseIssues } from "../core/rules";
+import { Catalog } from "../../core/catalog";
+import { courseIssues } from "../../core/rules";
 import { statesOfMatter } from "./course";
 import { advance, goalReached, heatLabStart } from "./heat-lab";
-import { changeName, energyAt, type MatterState, speedWord, waterStateAt } from "./matter";
+import { changeName, energyAt, type MatterState, speedWord, waterStateAt } from "../../science/matter";
 import type { HeatLabActivity } from "./types";
 
 test("the course is open from the start and ordered matter, states, heat, changes", () => {

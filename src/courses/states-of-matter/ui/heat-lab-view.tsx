@@ -1,28 +1,20 @@
 import { signal, Text, View } from "nsh";
 import { Slider } from "nsh/base";
-import type { ActivityProps } from "../../ui/activities/types";
-import { PrimaryButton } from "../../ui/kit/button";
-import { SubjectColor } from "../../ui/kit/theme";
+import { stepper } from "../../../ui/activities/step";
+import type { ActivityProps } from "../../../ui/activities/types";
+import { PrimaryButton } from "../../../ui/kit/button";
+import { SubjectColor } from "../../../ui/kit/theme";
 import { advance, goalReached, heatLabStart, type HeatLabState } from "../heat-lab";
-import { energyAt, maxCelsius, minCelsius, waterStateAt } from "../matter";
+import { energyAt, maxCelsius, minCelsius, waterStateAt } from "../../../science/matter";
 import type { HeatLabActivity } from "../types";
-import { ParticleView } from "./particle-view";
-import { dartRound, palette, stateName } from "./palette";
+import { ParticleView } from "../../../science/ui/particle-view";
+import { dartRound, palette, stateName } from "../../../science/ui/palette";
 
 /** Drag a thermometer for a sample of water and watch its particles; each goal asks for a state of matter. */
 export function HeatLabView(props: ActivityProps<HeatLabActivity>) {
   const lab = signal<HeatLabState>(heatLabStart);
-  let finished = false;
-  const next = () => {
-    if (finished) return;
-    const step = advance(props.activity, lab());
-    if ("result" in step) {
-      finished = true;
-      props.complete(step.result);
-      return;
-    }
-    lab.set(step.state);
-  };
+  const apply = stepper(lab, props.complete);
+  const next = () => apply(advance(props.activity, lab()));
   return (
     <View style={{ flex: 1, padding: 24, gap: 12 }}>
       <Text style={{ fontSize: 14, fontWeight: "600", color: palette.onSurfaceVariant }}>

@@ -1,4 +1,4 @@
-import { kai, lily } from "../classmates";
+import { kai, lily } from "../../../science/classmates";
 import type { ScienceLesson } from "../types";
 
 // Changes of state and conservation of mass. Targets "boiling bubbles are air" and "evaporated water is gone".

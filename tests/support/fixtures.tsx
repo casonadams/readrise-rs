@@ -8,7 +8,7 @@ import type {
   WhoIsRightActivity,
 } from "../../src/core/course";
 import type { ActivityResult } from "../../src/core/scoring";
-import type { ExperimentId, HeatLabActivity, HeatStage, SceneSpec } from "../../src/science/types";
+import type { ExperimentId, HeatLabActivity, HeatStage, SceneSpec } from "../../src/courses/states-of-matter/types";
 import type { RenderExperiment, RenderScene } from "../../src/ui/activities/types";
 
 export const quiz: QuizActivity = {

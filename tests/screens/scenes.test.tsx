@@ -1,7 +1,7 @@
 import { describe, expect, open, test } from "nsh/test";
 import type { App } from "nsh/test";
 import { changeName, waterStateAt } from "../../src/science/matter";
-import type { SceneSpec } from "../../src/science/types";
+import type { SceneSpec } from "../../src/courses/states-of-matter/types";
 import { viewports } from "../support/viewports";
 
 const heatStages = [

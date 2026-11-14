@@ -2,8 +2,8 @@ import { describe, expect, open, test } from "nsh/test";
 import { openLessonActivity } from "../support/open";
 import type { App } from "nsh/test";
 import { changeName, waterStateAt } from "../../src/science/matter";
-import { statesOfMatter } from "../../src/science/course";
-import type { ScienceActivity, SceneSpec } from "../../src/science/types";
+import { statesOfMatter } from "../../src/courses/states-of-matter/course";
+import type { ScienceActivity, SceneSpec } from "../../src/courses/states-of-matter/types";
 import { viewports } from "../support/viewports";
 
 const explainers = statesOfMatter.lessons.flatMap((lesson, lessonIndex) =>

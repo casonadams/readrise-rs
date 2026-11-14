@@ -1,6 +1,6 @@
-import { defaultMaxXp } from "../core/course";
-import type { Step } from "../core/scoring";
-import { minCelsius, waterStateAt } from "./matter";
+import { defaultMaxXp } from "../../core/course";
+import type { Step } from "../../core/scoring";
+import { minCelsius, waterStateAt } from "../../science/matter";
 import type { HeatLabActivity } from "./types";
 
 export interface HeatLabState {

@@ -1,4 +1,4 @@
-import { ava, sam } from "../classmates";
+import { ava, sam } from "../../../science/classmates";
 import type { ScienceLesson } from "../types";
 
 // Solid, liquid, gas as particle arrangements. Targets "air fills the gaps between particles" and

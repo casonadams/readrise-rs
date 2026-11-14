@@ -9,6 +9,7 @@ import { Shake } from "../kit/shake";
 import { TextAction } from "../kit/text-action";
 import { tint } from "../kit/tint";
 import { activityKinds, feedbackColors, SubjectColor } from "../kit/theme";
+import { stepper } from "./step";
 import type { ActivityProps } from "./types";
 
 const binColors = ["#1E88E5", "#EF6C00", "#00897B"];
@@ -36,7 +37,7 @@ export function SortView(props: ActivityProps<SortActivity>) {
   let cardRef: ViewRef | undefined;
   let cardCentre: { x: number; y: number } | null = null;
   let rects: (Rect | undefined)[] = [];
-  let finished = false;
+  const apply = stepper(state, props.complete);
 
   const binAt = (x: number, y: number): number | null => {
     const i = rects.findIndex(
@@ -95,14 +96,7 @@ export function SortView(props: ActivityProps<SortActivity>) {
     void dragY.spring(0, { velocity: e.velocity.y });
   };
 
-  const finish = () => {
-    if (finished) return;
-    const step = finishSort(activity, state());
-    if ("result" in step) {
-      finished = true;
-      props.complete(step.result);
-    }
-  };
+  const finish = () => apply(finishSort(activity, state()));
 
   return (
     <View class="flex-1 gap-3 px-5 pb-5 pt-2">

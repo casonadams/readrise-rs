@@ -22,8 +22,6 @@ export interface Subject {
   readonly color: string;
 }
 
-export const science: Subject = { id: "science", title: "Science", emoji: "\u{1F52C}", color: "#1976D2" };
-
 /** Why an option is wrong, keyed by its index in the options. */
 export type WrongFeedback = Readonly<Record<number, string>>;
 

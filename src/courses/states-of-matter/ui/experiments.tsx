@@ -1,14 +1,14 @@
 import { type CanvasRenderingContext2D, Canvas, cleanup, effect, signal, Text, View } from "nsh";
-import type { ExperimentProps, RenderExperiment } from "../../ui/activities/types";
-import { SubjectColor } from "../../ui/kit/theme";
-import { PrimaryButton } from "../../ui/kit/button";
-import { energyAt, waterStateAt } from "../matter";
+import type { ExperimentProps, RenderExperiment } from "../../../ui/activities/types";
+import { SubjectColor } from "../../../ui/kit/theme";
+import { PrimaryButton } from "../../../ui/kit/button";
+import { energyAt, waterStateAt } from "../../../science/matter";
 import type { ExperimentId } from "../types";
-import { fillCircle, fitStage } from "./draw";
-import { ParticleView } from "./particle-view";
-import { dartRound, mixHex, palette } from "./palette";
-import { ExperimentSlider, FactPill, Pop } from "./parts";
-import { createTween, easeIn, easeOutBack, elasticOut } from "./tween";
+import { fillCircle, fitStage } from "../../../science/ui/draw";
+import { ParticleView } from "../../../science/ui/particle-view";
+import { dartRound, mixHex, palette } from "../../../science/ui/palette";
+import { ExperimentSlider, FactPill, Pop } from "../../../science/ui/parts";
+import { createTween, easeIn, easeOutBack, elasticOut } from "../../../science/ui/tween";
 
 /** The experiment for `experiment`. Each one's controls do nothing until `active`, and it reports `onObserved` once. */
 export const renderExperiment: RenderExperiment<ExperimentId> = (experiment, props) => {
