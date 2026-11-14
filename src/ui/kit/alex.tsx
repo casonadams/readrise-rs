@@ -1,6 +1,6 @@
 import { Canvas, Text, View } from "nsh";
 import type { Kid } from "../../core/course";
-import { KidAvatar } from "./kid-avatar";
+import { drawFace } from "./kid-avatar";
 import { tint } from "./tint";
 import { SubjectColor } from "./theme";
 
@@ -9,48 +9,62 @@ export const alex: Kid = { name: "Alex", skin: "#E8B48A", hair: "#8D4B2A" };
 
 const frames = "#263238";
 
-/** The face fills this share of the avatar; the spikes of hair stand in the space above it. */
-const face = 0.78;
-const spikes = 5;
+const cap = { crown: "#E53935", band: "#B71C1C" };
+/** The head's share of the avatar; the cap's brim sticks up behind it. */
+const head = 0.92;
 
-/** Alex's face: a classmate's face with spiky hair and round glasses. */
+/** Alex's face: a classmate's face with a cap on backwards and round glasses. */
 export function AlexAvatar(props: { size?: number }) {
   const size = () => props.size ?? 44;
   return (
-    <View accessible accessibilityLabel="Alex" style={{ width: size(), height: size() }}>
-      <View class="absolute bottom-0" style={{ left: (size() * (1 - face)) / 2 }}>
-        <KidAvatar kid={alex} size={size() * face} />
-      </View>
-      <Canvas
-        class="absolute inset-0"
-        draw={(cx, { width, height }) => {
-          const r = (Math.min(width, height) * face) / 2;
-          const x = width / 2;
-          const y = height - r;
-          cx.fillStyle = alex.hair;
-          cx.beginPath();
-          for (let i = 0; i < spikes; i++) {
-            const from = Math.PI * (1.12 + (0.76 * i) / spikes);
-            const to = Math.PI * (1.12 + (0.76 * (i + 1)) / spikes);
-            const tip = (from + to) / 2;
-            cx.moveTo(x + Math.cos(from) * r * 0.8, y + Math.sin(from) * r * 0.8);
-            cx.lineTo(x + Math.cos(tip) * r * 1.5, y + Math.sin(tip) * r * 1.5);
-            cx.lineTo(x + Math.cos(to) * r * 0.8, y + Math.sin(to) * r * 0.8);
-          }
-          cx.fill();
-          const eyeY = y + r * 0.12;
-          cx.strokeStyle = frames;
-          cx.lineWidth = Math.max(1.5, r * 0.07);
-          cx.beginPath();
-          cx.arc(x - r * 0.3, eyeY, r * 0.21, 0, Math.PI * 2);
-          cx.moveTo(x + r * 0.51, eyeY);
-          cx.arc(x + r * 0.3, eyeY, r * 0.21, 0, Math.PI * 2);
-          cx.moveTo(x - r * 0.09, eyeY - r * 0.02);
-          cx.lineTo(x + r * 0.09, eyeY - r * 0.02);
-          cx.stroke();
-        }}
-      />
-    </View>
+    <Canvas
+      accessible
+      accessibilityLabel="Alex"
+      style={{ width: size(), height: size() }}
+      draw={(cx, { width, height }) => {
+        const pi = Math.PI;
+        const r = (Math.min(width, height) * head) / 2;
+        const x = width / 2;
+        const y = height - r;
+        cx.fillStyle = alex.hair;
+        cx.beginPath();
+        cx.arc(x, y, r, 0, pi * 2);
+        cx.fill();
+        cx.fillStyle = cap.band;
+        cx.beginPath();
+        cx.ellipse(x + r * 0.1, y - r * 0.95, r * 0.75, r * 0.14, -0.12, 0, pi * 2);
+        cx.fill();
+        drawFace(cx, alex, x, y, r);
+        const edge = pi * 1.117;
+        const bandY = y - r * 0.5;
+        cx.fillStyle = cap.crown;
+        cx.beginPath();
+        cx.arc(x, y, r, edge, pi * 3 - edge);
+        cx.quadraticCurveTo(x, bandY, x + Math.cos(edge) * r, y + Math.sin(edge) * r);
+        cx.fill();
+        cx.strokeStyle = cap.band;
+        cx.lineWidth = r * 0.12;
+        cx.lineCap = "round";
+        cx.beginPath();
+        cx.moveTo(x - Math.cos(edge) * r * 0.97, y + Math.sin(edge) * r * 0.97);
+        cx.quadraticCurveTo(x, bandY, x + Math.cos(edge) * r * 0.97, y + Math.sin(edge) * r * 0.97);
+        cx.stroke();
+        cx.fillStyle = alex.hair;
+        cx.beginPath();
+        cx.arc(x, bandY + r * 0.06, r * 0.15, pi, pi * 2);
+        cx.fill();
+        const eyeY = y + r * 0.12;
+        cx.strokeStyle = frames;
+        cx.lineWidth = Math.max(1.5, r * 0.07);
+        cx.beginPath();
+        cx.arc(x - r * 0.3, eyeY, r * 0.21, 0, pi * 2);
+        cx.moveTo(x + r * 0.51, eyeY);
+        cx.arc(x + r * 0.3, eyeY, r * 0.21, 0, pi * 2);
+        cx.moveTo(x - r * 0.09, eyeY - r * 0.02);
+        cx.lineTo(x + r * 0.09, eyeY - r * 0.02);
+        cx.stroke();
+      }}
+    />
   );
 }
 
