@@ -91,6 +91,11 @@ export interface ChoiceQuestion<Visual = never> {
   /** Shown once the question is settled; says why it is right. */
   readonly explanation: string;
   readonly visual?: Visual;
+  /**
+   * The choices are in an order that means something (numbers, a scale, yes then no), so they never move.
+   * Other choices come in a new order on every attempt.
+   */
+  readonly ordered?: true;
 }
 
 export interface QuizActivity<Visual = never> {
@@ -186,8 +191,18 @@ export interface Course<A = unknown> {
   readonly lessons: readonly Lesson<A>[];
 }
 
+/** Any activity, a course's own kinds included: all the runner and the rules need is its kind. */
+export type AnyActivity = { readonly kind: string };
+
+const coreKinds: Readonly<Record<string, true>> = { quiz: true, predict: true, explainer: true, sort: true, whoIsRight: true };
+
+/** True for the activities every course can use, false for a course's own kinds. */
+export function isCoreActivity(activity: AnyActivity): activity is Activity<unknown, unknown, unknown> {
+  return coreKinds[activity.kind] === true;
+}
+
 /** Every quiz question of `course`, warm-ups included, in lesson order. */
-export function courseQuestions(course: Course<{ readonly kind: string }>): ChoiceQuestion<unknown>[] {
+export function courseQuestions(course: Course<AnyActivity>): ChoiceQuestion<unknown>[] {
   return course.lessons.flatMap((lesson) =>
     lesson.activities.flatMap((a) => (a.kind === "quiz" ? (a as QuizActivity<unknown>).questions : [])),
   );

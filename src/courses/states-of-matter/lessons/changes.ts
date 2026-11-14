@@ -84,6 +84,7 @@ export const changesLesson: ScienceLesson = scienceLesson({
   check: [
     {
       id: itemId("changes-ice-mass"),
+      ordered: true,
       prompt: "A 20 g ice cube melts completely. What is the mass of the water?",
       choices: [
         wrong("Less than 20 g", "No particles escape, so no mass is lost."),

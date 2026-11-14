@@ -21,6 +21,8 @@ the user asks otherwise.
   colours, labels). Never add a flag that switches behaviour.
 - Activity logic is a pure state machine (`src/core/sessions/`, or a course's own like `heat-lab.ts`), tested
   without a screen; the view shows the state, forwards taps and applies each step with `stepper`.
+- Randomness is seeded and passed in (`seededRandom` in `src/core/random.ts`), never `Math.random`, so every run
+  can be repeated.
 - Course, lesson and question ids (`courseId`, `lessonId`, `itemId`) are stored in learners' saved progress.
   Never rename or remove one; add a new one instead. `ids.lock` and `items.lock` list every shipped id and
   `scripts/locks.ts` fails if one disappears or a new one is not added; every quiz question has an `id`, unique
@@ -85,7 +87,9 @@ none.
   screen does the explaining.
 - Use concrete, everyday situations (balloons, puddles, a cold glass) before abstract statements.
 - Classmates in "Who's right?" come from `src/science/classmates.ts`; keep the cast diverse and vary who is right.
-- No "all of the above"; avoid choices whose position gives the answer away.
+- Choices come in a new order on every attempt (`attemptActivities`), so never write "all of the above" or other
+  text that points at other choices; `courseIssues` rejects it. Mark a question `ordered: true` only when its
+  order means something (numbers, a scale, yes then no).
 
 ## Scenes and experiments
 

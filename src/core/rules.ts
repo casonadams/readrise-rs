@@ -1,18 +1,17 @@
-import { type Activity, type Choice, type ChoiceQuestion, type Course, courseQuestions, type SortActivity } from "./course";
+import {
+  type AnyActivity,
+  type Choice,
+  type ChoiceQuestion,
+  type Course,
+  courseQuestions,
+  isCoreActivity,
+  type SortActivity,
+} from "./course";
 
-type Kinded = { readonly kind: string };
-type CoreActivity = Activity<unknown, unknown, unknown>;
-
-const coreKinds: Readonly<Record<string, true>> = { quiz: true, predict: true, explainer: true, sort: true, whoIsRight: true };
-
-function isCore(activity: Kinded): activity is CoreActivity {
-  return coreKinds[activity.kind] === true;
-}
-
-function arcIssues(id: string, first: boolean, activities: readonly Kinded[]): string[] {
+function arcIssues(id: string, first: boolean, activities: readonly AnyActivity[]): string[] {
   const issues: string[] = [];
   const opener = activities[0];
-  const warmUp = opener !== undefined && isCore(opener) && opener.kind === "quiz" && opener.role === "warmUp";
+  const warmUp = opener !== undefined && isCoreActivity(opener) && opener.kind === "quiz" && opener.role === "warmUp";
   if (!first && !warmUp) issues.push(`${id}: does not open with a warm-up`);
   if (first && warmUp) issues.push(`${id}: first lesson has a warm-up`);
   const predicts = activities.flatMap((a, i) => (a.kind === "predict" ? [i] : []));
@@ -25,9 +24,14 @@ function arcIssues(id: string, first: boolean, activities: readonly Kinded[]): s
   return issues;
 }
 
-/** One right choice, no choice twice, and every wrong one says why. */
-function choiceIssues(where: string, choices: readonly Choice[]): string[] {
+const positional = /\b(all|both|none|neither) of (the|these)\b/i;
+
+/** One right choice, no choice twice, every wrong one says why, and none that `move` points at the others. */
+function choiceIssues(where: string, choices: readonly Choice[], move = true): string[] {
   const issues: string[] = [];
+  for (const c of choices.filter((c) => move && positional.test(c.text))) {
+    issues.push(`${where}: "${c.text}" points at other choices, which move; reword it or mark the question ordered`);
+  }
   const rights = choices.filter((c) => c.right).length;
   if (rights !== 1) issues.push(`${where}: has ${rights} right choices, not 1`);
   if (new Set(choices.map((c) => c.text)).size !== choices.length) issues.push(`${where}: repeats a choice`);
@@ -38,7 +42,7 @@ function choiceIssues(where: string, choices: readonly Choice[]): string[] {
 }
 
 function questionIssues(q: ChoiceQuestion<unknown>): string[] {
-  const issues = choiceIssues(`"${q.prompt}"`, q.choices);
+  const issues = choiceIssues(`"${q.prompt}"`, q.choices, q.ordered !== true);
   if (q.explanation === "") issues.push(`"${q.prompt}": no explanation`);
   if (q.hint === undefined) issues.push(`"${q.prompt}": no hint`);
   if (q.reason !== undefined) issues.push(...choiceIssues(`"${q.prompt}" (why)`, q.reason.choices));
@@ -62,7 +66,7 @@ function sortIssues(s: SortActivity): string[] {
  * one right choice wherever the learner picks, and a reason for every wrong
  * one. Empty when the course follows them.
  */
-export function courseIssues(course: Course<Kinded>): string[] {
+export function courseIssues(course: Course<AnyActivity>): string[] {
   const issues: string[] = [];
   const ids = course.lessons.map((l) => l.id);
   if (new Set(ids).size !== ids.length) issues.push(`${course.id}: lesson ids repeat`);
@@ -72,7 +76,7 @@ export function courseIssues(course: Course<Kinded>): string[] {
   }
   course.lessons.forEach((lesson, i) => {
     issues.push(...arcIssues(lesson.id, i === 0, lesson.activities));
-    for (const a of lesson.activities.filter(isCore)) {
+    for (const a of lesson.activities.filter(isCoreActivity)) {
       if (a.kind === "quiz") issues.push(...a.questions.flatMap(questionIssues));
       else if (a.kind === "predict") issues.push(...choiceIssues(`"${a.question}"`, a.choices));
       else if (a.kind === "sort") issues.push(...sortIssues(a));

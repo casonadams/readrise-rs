@@ -39,21 +39,58 @@ async function reachState(app: App, target: string, reach: number): Promise<void
   }
 }
 
+type Quiz = Extract<ScienceActivity, { kind: "quiz" }>;
+type Sort = Extract<ScienceActivity, { kind: "sort" }>;
+type WhoIsRight = Extract<ScienceActivity, { kind: "whoIsRight" }>;
+
+/** Questions come in a new order on every attempt: answers each one on screen, a wrong pick and the hint first. */
+async function playQuiz(app: App, quiz: Quiz): Promise<void> {
+  const shown = (q: Quiz["questions"][number]) =>
+    app.shows(`text:${q.prompt}`) && (q.visual === undefined || app.shows(`label:Particles in a ${q.visual.particles}`));
+  for (const _ of quiz.questions) {
+    const q = quiz.questions.find(shown);
+    if (q === undefined) throw new Error(`none of the quiz's questions is on screen: ${app.texts().join(" | ")}`);
+    await app.press(`label:${wrongOf(q.choices).text}`);
+    if (app.count("label:Need a hint?") > 0) await app.press("label:Need a hint?");
+    await app.press(`label:${rightOf(q.choices).text}`);
+    if (q.reason !== undefined) {
+      await app.press(`label:${wrongOf(q.reason.choices).text}`);
+      await app.press(`label:${rightOf(q.reason.choices).text}`);
+    }
+    await app.press("label:Continue");
+  }
+}
+
+/** Items come in a new order on every attempt: sorts the one on the card, the one not yet in a box. */
+async function playSort(app: App, sort: Sort): Promise<void> {
+  const sorted = new Set<string>();
+  const current = () => {
+    const item = sort.items.find((i) => !sorted.has(i.label) && app.texts().includes(i.label));
+    if (item === undefined) throw new Error(`no unsorted item on screen: ${app.texts().join(" | ")}`);
+    return item;
+  };
+  await app.press(`label:${sort.bins[(current().bin + 1) % sort.bins.length]}`);
+  for (const _ of sort.items) {
+    const item = current();
+    await app.press(`label:${sort.bins[item.bin]}`);
+    sorted.add(item.label);
+  }
+  await app.press("label:Continue");
+}
+
+async function playWhoIsRight(app: App, who: WhoIsRight): Promise<void> {
+  const claimLabel = (says: Choice) => `label:${who.claims.find((c) => c.says === says)?.kid.name}: ${says.text}`;
+  const says = who.claims.map((c) => c.says);
+  await app.press(claimLabel(wrongOf(says)));
+  await app.press(claimLabel(rightOf(says)));
+  await app.press("label:Continue");
+}
+
 /** Plays one activity the way a learner who makes a mistake would, so feedback, hints and reasons all show. */
 async function play(app: App, activity: ScienceActivity, reach: number): Promise<void> {
   switch (activity.kind) {
     case "quiz":
-      for (const q of activity.questions) {
-        await app.press(`label:${wrongOf(q.choices).text}`);
-        if (app.count("label:Need a hint?") > 0) await app.press("label:Need a hint?");
-        await app.press(`label:${rightOf(q.choices).text}`);
-        if (q.reason !== undefined) {
-          await app.press(`label:${wrongOf(q.reason.choices).text}`);
-          await app.press(`label:${rightOf(q.reason.choices).text}`);
-        }
-        await app.press("label:Continue");
-      }
-      return;
+      return playQuiz(app, activity);
     case "predict":
       await app.press(`label:${wrongOf(activity.choices).text}`);
       await app.press("label:Pretty sure");
@@ -66,19 +103,9 @@ async function play(app: App, activity: ScienceActivity, reach: number): Promise
       await app.press("label:Continue");
       return;
     case "sort":
-      await app.press(`label:${activity.bins[(activity.items[0].bin + 1) % activity.bins.length]}`);
-      for (const item of activity.items) await app.press(`label:${activity.bins[item.bin]}`);
-      await app.press("label:Continue");
-      return;
-    case "whoIsRight": {
-      const claimLabel = (says: Choice) =>
-        `label:${activity.claims.find((c) => c.says === says)?.kid.name}: ${says.text}`;
-      const says = activity.claims.map((c) => c.says);
-      await app.press(claimLabel(wrongOf(says)));
-      await app.press(claimLabel(rightOf(says)));
-      await app.press("label:Continue");
-      return;
-    }
+      return playSort(app, activity);
+    case "whoIsRight":
+      return playWhoIsRight(app, activity);
     case "heatLab":
       for (const [i, goal] of activity.goals.entries()) {
         await app.waitFor(`text:Goal ${i + 1} of ${activity.goals.length}`);

@@ -78,6 +78,7 @@ describe("finds", () => {
     ["a wrong choice whose feedback is empty", courseOf([predictA, explain, debate], [withQuestion({ choices: [right("a"), wrong("b", " ")] }), predictA, explain, debate]), `"W": "b" does not say why it is wrong`],
     ["a reason with two right choices", courseOf([predictA, explain, debate], [withQuestion({ reason: { choices: [right("r"), right("s")] } }), predictA, explain, debate]), `"W" (why): has 2 right choices, not 1`],
     ["a question id used twice", courseOf([predictA, explain, debate], [{ ...warmUp, questions: [question, question] }, predictA, explain, debate]), "c: question id w repeats"],
+    ["a shuffled choice that points at the others", courseOf([predictA, explain, debate], [withQuestion({ choices: [right("a"), wrong("All of the above", "f")] }), predictA, explain, debate]), `"W": "All of the above" points at other choices, which move; reword it or mark the question ordered`],
     ["an unused bin", courseOf([predictA, explain, { ...sortA, bins: ["b0", "b1", "b2"] }, debate]), `"S": a bin is never used`],
     ["a sort item that does not say why", courseOf([predictA, explain, { ...sortA, items: [{ label: "i0", bin: 0 }, { label: "i1", bin: 1, why: "w" }] }, debate]), `"i0": does not say why`],
   ];

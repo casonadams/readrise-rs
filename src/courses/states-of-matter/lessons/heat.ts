@@ -10,6 +10,7 @@ export const heatLesson: ScienceLesson = scienceLesson({
   warmUp: [
     {
       id: itemId("heat-warm-slide"),
+      ordered: true,
       prompt: "In which state do particles slide past each other?",
       choices: [
         wrong("Solid", "Solid particles are held in place. They only vibrate."),
@@ -106,6 +107,7 @@ export const heatLesson: ScienceLesson = scienceLesson({
     },
     {
       id: itemId("heat-freezing-point"),
+      ordered: true,
       prompt: "At what temperature does water freeze?",
       choices: [
         wrong("-10\u00B0C", "Water is already ice at -10\u00B0C. It froze before that."),

@@ -60,6 +60,7 @@ export const matterLesson: ScienceLesson = scienceLesson({
   check: [
     {
       id: itemId("matter-air"),
+      ordered: true,
       prompt: "Is air matter?",
       choices: [right("Yes"), wrong("No", "The full balloon tipped the scale, so air has mass.")],
       hint: "Remember what the balloon did to the scale.",
@@ -86,6 +87,7 @@ export const matterLesson: ScienceLesson = scienceLesson({
     },
     {
       id: itemId("matter-h2o-atoms"),
+      ordered: true,
       prompt: "How many atoms are in one water molecule (H2O)?",
       choices: [
         wrong("1", "H2O names more than one atom: H, H, and O."),

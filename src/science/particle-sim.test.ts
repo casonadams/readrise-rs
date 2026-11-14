@@ -1,5 +1,6 @@
 import { describe, expect, test } from "nsh/test";
-import { type Particle, ParticleSim, seededRandom } from "./particle-sim";
+import { seededRandom } from "../core/random";
+import { type Particle, ParticleSim } from "./particle-sim";
 import type { MatterState } from "./matter";
 
 function settled(
@@ -154,7 +155,7 @@ describe("particle sim", () => {
     }
 
     test("fitting keeps the area's shape and the lattice's minimum height", () => {
-      const sim = new ParticleSim();
+      const sim = new ParticleSim({ random: seededRandom(7) });
       sim.fit(400, 200);
       expect([sim.width, sim.height]).toEqual([1.2, 0.6]);
       sim.fit(200, 400);

@@ -76,6 +76,7 @@ export const statesLesson: ScienceLesson = scienceLesson({
   check: [
     {
       id: itemId("states-picture-gas"),
+      ordered: true,
       prompt: "Which state of matter is this?",
       choices: [
         wrong("Solid", "Solid particles sit packed in rows. These fly around."),
@@ -98,6 +99,7 @@ export const statesLesson: ScienceLesson = scienceLesson({
     },
     {
       id: itemId("states-picture-solid"),
+      ordered: true,
       prompt: "Which state of matter is this?",
       choices: [
         right("Solid"),

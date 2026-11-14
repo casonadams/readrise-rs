@@ -1,4 +1,5 @@
 import { Canvas, cleanup, effect, reduceMotion, signal, untracked, View } from "nsh";
+import { seededRandom } from "../../core/random";
 import type { MatterState } from "../matter";
 import { ParticleSim } from "../particle-sim";
 import { fillCircle } from "./draw";
@@ -12,11 +13,12 @@ const settleSteps = 180;
 type Rgb = [number, number, number];
 
 /**
- * Animated particles for `state`; `energy` (0..1) sets how fast they move. The simulation steps on every display
- * frame and a canvas redraws from the frame signal. Under reduced motion it shows one settled frame instead.
+ * Animated particles for `state`; `energy` (0..1) sets how fast they move, and `seed` where they start and how
+ * they jostle. The simulation steps on every display frame and a canvas redraws from the frame signal. Under
+ * reduced motion it shows one settled frame instead.
  */
-export function ParticleView(props: { state: MatterState; energy: number }) {
-  const sim = new ParticleSim();
+export function ParticleView(props: { state: MatterState; energy: number; seed?: number }) {
+  const sim = new ParticleSim({ random: seededRandom(props.seed ?? 1) });
   const frame = signal(0);
   let colour = hexChannels(particleColor(props.state));
   let last = 0;

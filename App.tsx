@@ -1,5 +1,6 @@
 import { mount, signal } from "nsh";
 import { createNavStack, NavPage, NavStack } from "nsh/base";
+import { attemptActivities } from "./src/core/attempt";
 import { Catalog } from "./src/core/catalog";
 import type { CourseId, LessonId } from "./src/core/course";
 import { localDay, recordLesson, streakOn } from "./src/core/progress";
@@ -23,6 +24,7 @@ const today = () => localDay(new Date());
 
 function LessonPage(props: { courseId: CourseId; lessonId: LessonId }) {
   const { course, lesson } = catalog.lesson(props.courseId, props.lessonId);
+  const attempt = { ...lesson, activities: attemptActivities(lesson, Date.now()) };
   const outcome = signal<ActivityResult | null>(null);
   const finish = (result: ActivityResult) => {
     outcome.set(result);
@@ -35,7 +37,7 @@ function LessonPage(props: { courseId: CourseId; lessonId: LessonId }) {
         when={outcome()}
         else={
           <LessonRunner
-            lesson={lesson}
+            lesson={attempt}
             renderActivity={packs[catalog.courses.indexOf(course)].renderActivity}
             onFinish={finish}
             onLeave={() => nav.pop()}
