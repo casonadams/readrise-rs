@@ -1,5 +1,10 @@
 # Every course/lesson id that has shipped. Learners' progress is stored
 # under these ids, so never rename or remove one; add new ids in sorted order.
+mixtures-and-solutions
+mixtures-and-solutions/dissolving
+mixtures-and-solutions/how-much
+mixtures-and-solutions/mass
+mixtures-and-solutions/melting-or-dissolving
 states-of-matter
 states-of-matter/changes
 states-of-matter/evaporation

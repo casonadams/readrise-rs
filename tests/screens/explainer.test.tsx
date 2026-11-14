@@ -1,24 +1,19 @@
 import { describe, expect, open, test } from "nsh/test";
+import { activitiesOf, type AnySceneSpec } from "../support/installed";
 import { openLessonActivity } from "../support/open";
-import { statesOfMatter } from "../../src/courses/states-of-matter/course";
-import type { ScienceActivity } from "../../src/courses/states-of-matter/types";
+import type { ExplainerActivity } from "../../src/core/course";
 import { expectScene } from "../support/scenes";
 import { viewports } from "../support/viewports";
 
-const explainers = statesOfMatter.lessons.flatMap((lesson, lessonIndex) =>
-  lesson.activities.flatMap((activity: ScienceActivity, index) =>
-    activity.kind === "explainer" ? [{ lesson: lessonIndex, activity: index, explainer: activity }] : [],
-  ),
-);
+const explainers = activitiesOf<ExplainerActivity<AnySceneSpec>>("explainer");
 
 for (const viewport of viewports) {
   describe(viewport.name, () => {
-    for (const { lesson, activity, explainer } of explainers) {
-      const title = statesOfMatter.lessons[lesson].title;
+    for (const { at, title, activity: explainer } of explainers) {
       test(
         `${title}: "${explainer.title}" shows its caption, scene and buttons at every step`,
         async () => {
-          const app = await openLessonActivity(viewport, lesson, activity);
+          const app = await openLessonActivity(viewport, at);
           const last = explainer.steps.length - 1;
           for (let step = 0; step <= last; step++) {
             await app.waitFor(`text:${explainer.steps[step]}`);

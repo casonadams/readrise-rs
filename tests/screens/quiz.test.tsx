@@ -1,8 +1,8 @@
 import { describe, expect, open, test } from "nsh/test";
+import { activitiesOf } from "../support/installed";
 import { openLessonActivity } from "../support/open";
 import type { App } from "nsh/test";
 import type { Choice } from "../../src/core/course";
-import { statesOfMatter } from "../../src/courses/states-of-matter/course";
 import type { ScienceActivity } from "../../src/courses/states-of-matter/types";
 import { activityKinds } from "../../src/ui/kit/theme";
 import { rightOf } from "../support/choices";
@@ -11,20 +11,11 @@ import { viewports } from "../support/viewports";
 type Quiz = Extract<ScienceActivity, { kind: "quiz" }>;
 type Question = Quiz["questions"][number];
 
-const quizzes = statesOfMatter.lessons.flatMap((lesson, lessonIndex) =>
-  lesson.activities.flatMap((activity, activityIndex) =>
-    activity.kind === "quiz"
-      ? [
-          {
-            title: `${lesson.title}, ${activity.role === "warmUp" ? "warm-up" : "check"}`,
-            lesson: lessonIndex,
-            activity: activityIndex,
-            quiz: activity,
-          },
-        ]
-      : [],
-  ),
-);
+const quizzes = activitiesOf<Quiz>("quiz").map(({ at, title, activity }) => ({
+  title: `${title}, ${activity.role === "warmUp" ? "warm-up" : "check"}`,
+  at,
+  quiz: activity,
+}));
 
 function expectShown(app: App, selectors: readonly string[]): void {
   expect(selectors.filter((s) => !app.shows(s))).toEqual([]);
@@ -204,13 +195,13 @@ for (const viewport of viewports) {
   describe(viewport.name, () => {
     for (const c of quizzes) {
       test(`${c.title}: every wrong answer, hint and reason is explained and stays on screen`, async () => {
-        const app = await openLessonActivity(viewport, c.lesson, c.activity);
+        const app = await openLessonActivity(viewport, c.at);
         await walkWithMistakes(app, c.quiz);
         expect(app.texts().some((t) => t.startsWith("done: "))).toBe(true);
       }, 60000);
 
       test(`${c.title}: a first-try right answer is praised and every choice stays on screen`, async () => {
-        const app = await openLessonActivity(viewport, c.lesson, c.activity);
+        const app = await openLessonActivity(viewport, c.at);
         await walkFirstTry(app, c.quiz);
         expect(app.texts().some((t) => t.startsWith("done: "))).toBe(true);
       }, 60000);

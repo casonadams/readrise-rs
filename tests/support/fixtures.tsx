@@ -12,7 +12,7 @@ import {
   wrong,
 } from "../../src/core/course";
 import type { ActivityResult } from "../../src/core/scoring";
-import type { ExperimentId, HeatLabActivity, HeatStage, SceneSpec } from "../../src/courses/states-of-matter/types";
+import type { HeatLabActivity, HeatStage, SceneSpec } from "../../src/courses/states-of-matter/types";
 import type { RenderExperiment, RenderScene } from "../../src/ui/activities/types";
 
 export const quiz: QuizActivity = {
@@ -134,14 +134,6 @@ export function scene(name: string): SceneSpec {
   if (name === "heat") return { id: "heat", stages: heatStages };
   if (name === "matter" || name === "waterMolecule" || name === "states" || name === "evaporation") return { id: name };
   throw new Error(`unknown scene: ${name}`);
-}
-
-const experimentIds: readonly ExperimentId[] = ["balloon", "zoom", "heatGas", "stove", "evaporation"];
-
-export function experimentId(name: string): ExperimentId {
-  const id = experimentIds.find((e) => e === name);
-  if (id === undefined) throw new Error(`unknown experiment: ${name}`);
-  return id;
 }
 
 type Step = { readonly kind: "step"; readonly name: string; readonly result: ActivityResult };

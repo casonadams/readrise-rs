@@ -1,20 +1,18 @@
 import { describe, expect, open, test } from "nsh/test";
+import { activitiesOf } from "../support/installed";
 import { openLessonActivity } from "../support/open";
 import type { App } from "nsh/test";
 import { feedbackOf } from "../../src/core/course";
-import { statesOfMatter } from "../../src/courses/states-of-matter/course";
 import type { ScienceActivity } from "../../src/courses/states-of-matter/types";
 import { viewports } from "../support/viewports";
 
 type WhoIsRight = Extract<ScienceActivity, { kind: "whoIsRight" }>;
 
-const whoCases = statesOfMatter.lessons.flatMap((lesson, lessonIndex) =>
-  lesson.activities.flatMap((activity, activityIndex) =>
-    activity.kind === "whoIsRight"
-      ? [{ title: `${lesson.title}, who is right`, lesson: lessonIndex, activity: activityIndex, who: activity }]
-      : [],
-  ),
-);
+const whoCases = activitiesOf<WhoIsRight>("whoIsRight").map(({ at, title, activity }) => ({
+  title: `${title}, who is right`,
+  at,
+  who: activity,
+}));
 
 function expectShown(app: App, selectors: readonly string[]): void {
   expect(selectors.filter((s) => !app.shows(s))).toEqual([]);
@@ -90,7 +88,7 @@ for (const viewport of viewports) {
   describe(viewport.name, () => {
     for (const c of whoCases) {
       test(`${c.title}: every claim, every wrong reply and the right answer stay on screen`, async () => {
-        const app = await openLessonActivity(viewport, c.lesson, c.activity);
+        const app = await openLessonActivity(viewport, c.at);
         await walkWhoIsRight(app, c.who);
       }, 60000);
     }

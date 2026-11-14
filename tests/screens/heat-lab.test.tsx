@@ -1,19 +1,15 @@
 import { describe, expect, open, test } from "nsh/test";
+import { activitiesOf } from "../support/installed";
 import { openLessonActivity } from "../support/open";
 import type { App } from "nsh/test";
-import { statesOfMatter } from "../../src/courses/states-of-matter/course";
-import type { ScienceActivity } from "../../src/courses/states-of-matter/types";
+import type { HeatLabActivity } from "../../src/courses/states-of-matter/types";
 import { viewports } from "../support/viewports";
 
 const goalButton = "label:/^(Goal reached! Next goal|Finish)$/";
 
 const targetCelsius: Record<string, number> = { solid: -15, liquid: 40, gas: 110 };
 
-const heatLabs = statesOfMatter.lessons.flatMap((lesson, lessonIndex) =>
-  lesson.activities.flatMap((activity: ScienceActivity, index) =>
-    activity.kind === "heatLab" ? [{ lesson: lessonIndex, activity: index, lab: activity }] : [],
-  ),
-);
+const heatLabs = activitiesOf<HeatLabActivity>("heatLab");
 
 /** The readout line: "<n>°C  •  <state>". */
 function readout(app: App): string {
@@ -57,12 +53,11 @@ test("a drag to liquid water shows the goal button; finishing every goal reports
 
 for (const viewport of viewports) {
   describe(viewport.name, () => {
-    for (const { lesson, activity, lab } of heatLabs) {
-      const title = statesOfMatter.lessons[lesson].title;
+    for (const { at, title, activity: lab } of heatLabs) {
       test(
         `${title}: every goal shows its prompt, readout, slider, particles and goal button`,
         async () => {
-          const app = await openLessonActivity(viewport, lesson, activity);
+          const app = await openLessonActivity(viewport, at);
           const reach = viewport.width / 2 - 10;
           const total = lab.goals.length;
           for (const [i, goal] of lab.goals.entries()) {

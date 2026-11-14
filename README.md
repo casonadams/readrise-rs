@@ -1,6 +1,6 @@
 # Readrise (Native Shell)
 
-Readrise's science course, rebuilt as a TSX app on [Native Shell](https://nsh.dev).
+Readrise's science courses (States of Matter; Mixtures and Solutions), rebuilt as a TSX app on [Native Shell](https://nsh.dev).
 All app code is TSX, so lesson and UI changes ship as signed OTA packages without a new app build.
 Live web build: https://casonadams.github.io/readrise-rs/ (deployed by `.github/workflows/pages.yml` on pushes to `main`).
 

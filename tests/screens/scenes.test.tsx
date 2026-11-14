@@ -1,5 +1,5 @@
 import { describe, expect, open, test } from "nsh/test";
-import type { SceneSpec } from "../../src/courses/states-of-matter/types";
+import type { AnySceneSpec } from "../support/installed";
 import { expectScene } from "../support/scenes";
 import { viewports } from "../support/viewports";
 
@@ -9,13 +9,20 @@ const heatStages = [
   { from: 100, to: 120 },
 ];
 
-/** Each scene the harness mounts, with its last step (the harness clamps "Next step" there). */
-const scenes: readonly { readonly name: string; readonly spec: SceneSpec; readonly last: number }[] = [
-  { name: "matter", spec: { id: "matter" }, last: 3 },
-  { name: "waterMolecule", spec: { id: "waterMolecule" }, last: 4 },
-  { name: "states", spec: { id: "states" }, last: 4 },
-  { name: "heat", spec: { id: "heat", stages: heatStages }, last: heatStages.length - 1 },
-  { name: "evaporation", spec: { id: "evaporation" }, last: 3 },
+const states = "states-of-matter";
+const mixtures = "mixtures-and-solutions";
+
+/** Each scene the harness mounts, with its course and last step (the harness clamps "Next step" there). */
+const scenes: readonly { readonly course: string; readonly name: string; readonly spec: AnySceneSpec; readonly last: number }[] = [
+  { course: states, name: "matter", spec: { id: "matter" }, last: 3 },
+  { course: states, name: "waterMolecule", spec: { id: "waterMolecule" }, last: 4 },
+  { course: states, name: "states", spec: { id: "states" }, last: 4 },
+  { course: states, name: "heat", spec: { id: "heat", stages: heatStages }, last: heatStages.length - 1 },
+  { course: states, name: "evaporation", spec: { id: "evaporation" }, last: 3 },
+  { course: mixtures, name: "dissolving", spec: { id: "dissolving" }, last: 3 },
+  { course: mixtures, name: "meltOrDissolve", spec: { id: "meltOrDissolve" }, last: 3 },
+  { course: mixtures, name: "mass", spec: { id: "mass" }, last: 3 },
+  { course: mixtures, name: "spoons", spec: { id: "spoons" }, last: 4 },
 ];
 
 describe("heat scene", () => {
@@ -32,16 +39,9 @@ describe("heat scene", () => {
 });
 
 describe("scenes", () => {
-  const ported: [string, number][] = [
-    ["matter", 3],
-    ["waterMolecule", 4],
-    ["states", 4],
-    ["heat", 2],
-    ["evaporation", 3],
-  ];
-  for (const [scene, last] of ported) {
-    test(`the ${scene} scene renders every step`, async () => {
-      const app = await open("../support/harness.tsx", { host: { params: { screen: "scene", scene } }, clock: {} });
+  for (const { course, name, last } of scenes) {
+    test(`the ${name} scene renders every step`, async () => {
+      const app = await open("../support/harness.tsx", { host: { params: { screen: "scene", course, scene: name } }, clock: {} });
       expect(app.texts()).toContain("Step 0");
       for (let step = 1; step <= last; step++) {
         await app.press("label:Next step");
@@ -54,14 +54,14 @@ describe("scenes", () => {
 
 for (const viewport of viewports) {
   describe(viewport.name, () => {
-    for (const { name, spec, last } of scenes) {
+    for (const { course, name, spec, last } of scenes) {
       test(`the ${name} scene shows its parts at every step`, async () => {
         const app = await open("../support/harness.tsx", {
           clock: {},
           width: viewport.width,
           height: viewport.height,
           reducedMotion: true,
-          host: { params: { screen: "scene", scene: name } },
+          host: { params: { screen: "scene", course, scene: name } },
         });
         await app.waitFor("text:Step 0");
         await app.wait(1200);

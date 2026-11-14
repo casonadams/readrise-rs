@@ -4,11 +4,7 @@ import { type Lesson, lessonId } from "../../src/core/course";
 import type { ActivityResult } from "../../src/core/scoring";
 import { startSession } from "../../src/core/session";
 import { statesOfMatter } from "../../src/courses/states-of-matter/course";
-import { statesOfMatterPack } from "../../src/courses/states-of-matter/pack";
-import type { ExperimentId, SceneSpec } from "../../src/courses/states-of-matter/types";
-import { renderExperiment } from "../../src/courses/states-of-matter/ui/experiments";
 import { HeatLabView } from "../../src/courses/states-of-matter/ui/heat-lab-view";
-import { renderScene } from "../../src/courses/states-of-matter/ui/scenes";
 import { ExplainerView } from "../../src/ui/activities/explainer";
 import { PredictView } from "../../src/ui/activities/predict";
 import { QuizView } from "../../src/ui/activities/quiz";
@@ -19,6 +15,7 @@ import { SubjectColor } from "../../src/ui/kit/theme";
 import { LessonResult } from "../../src/ui/lesson-result";
 import { LessonRunner } from "../../src/ui/lesson-runner";
 import * as fixtures from "./fixtures";
+import { type TestCourse, testCourses } from "./installed";
 
 /**
  * Test entry: mounts the screen `host.params.screen` names. Activities run inside the real lesson runner, so they
@@ -88,24 +85,27 @@ function fixtureActivity(name: string): JSX.Element {
   throw new Error(`unknown fixture activity: ${name}`);
 }
 
-function ExperimentHarness(props: { experiment: ExperimentId; active: boolean }) {
+function ExperimentHarness(props: { course: TestCourse; experiment: string; active: boolean }) {
   const observed = signal(0);
   return (
     <View class="flex-1 p-6">
-      {renderExperiment(props.experiment, { active: props.active, onObserved: () => observed.update((n) => n + 1) })}
+      {props.course.experiment(props.experiment, {
+        active: props.active,
+        onObserved: () => observed.update((n) => n + 1),
+      })}
       <Text>{`Observed ${observed()}`}</Text>
     </View>
   );
 }
 
 /** An active experiment the learner can leave: "Leave" takes it off the screen. */
-function LeavingExperimentHarness(props: { experiment: ExperimentId }) {
+function LeavingExperimentHarness(props: { course: TestCourse; experiment: string }) {
   const observed = signal(0);
   const shown = signal(true);
   return (
     <View class="flex-1 p-6">
       <If when={shown()}>
-        {renderExperiment(props.experiment, { active: true, onObserved: () => observed.update((n) => n + 1) })}
+        {props.course.experiment(props.experiment, { active: true, onObserved: () => observed.update((n) => n + 1) })}
       </If>
       <Text>{`Observed ${observed()}`}</Text>
       <PrimaryButton label="Leave" onPress={() => shown.set(false)} />
@@ -113,14 +113,12 @@ function LeavingExperimentHarness(props: { experiment: ExperimentId }) {
   );
 }
 
-const sceneSteps: Record<SceneSpec["id"], number> = { matter: 4, waterMolecule: 5, states: 5, heat: 3, evaporation: 4 };
-
-function SceneHarness(props: { scene: SceneSpec }) {
+function SceneHarness(props: { course: TestCourse; scene: string }) {
   const step = signal(0);
-  const last = props.scene.id === "heat" ? props.scene.stages.length - 1 : sceneSteps[props.scene.id] - 1;
+  const last = props.course.sceneSteps[props.scene] - 1;
   return (
     <View class="flex-1 gap-3 p-6">
-      <View class="flex-1">{renderScene(props.scene, step)}</View>
+      <View class="flex-1">{props.course.scene(props.scene, step)}</View>
       <Text>{`Step ${step()}`}</Text>
       <PrimaryButton label="Next step" onPress={() => step.update((n) => Math.min(last, n + 1))} />
     </View>
@@ -187,19 +185,20 @@ function ResultHarness() {
 
 function screen(): JSX.Element {
   const params = host.params;
+  const course = testCourses[String(params.course ?? statesOfMatter.id)];
   switch (params.screen) {
     case "lesson-activity": {
-      const activity = statesOfMatter.lessons[Number(params.lesson)].activities[Number(params.activity)];
-      return <InRunner activity={activity} render={statesOfMatterPack.renderActivity} />;
+      const activity = course.course.lessons[Number(params.lesson)].activities[Number(params.activity)];
+      return <InRunner activity={activity} render={course.pack.renderActivity} />;
     }
     case "fixture-activity":
       return fixtureActivity(String(params.activity));
     case "experiment":
-      return <ExperimentHarness experiment={fixtures.experimentId(String(params.experiment))} active={params.active === true} />;
+      return <ExperimentHarness course={course} experiment={String(params.experiment)} active={params.active === true} />;
     case "experiment-leaving":
-      return <LeavingExperimentHarness experiment={fixtures.experimentId(String(params.experiment))} />;
+      return <LeavingExperimentHarness course={course} experiment={String(params.experiment)} />;
     case "scene":
-      return <SceneHarness scene={fixtures.scene(String(params.scene))} />;
+      return <SceneHarness course={course} scene={String(params.scene)} />;
     case "heat-lab":
       return <HeatLabHarness />;
     case "runner":
@@ -212,7 +211,7 @@ function screen(): JSX.Element {
 
 function Harness() {
   return (
-    <SubjectColor.Provider value={statesOfMatter.subject.color}>
+    <SubjectColor.Provider value={testCourses[String(host.params.course ?? statesOfMatter.id)].course.subject.color}>
       <View class="flex-1 bg-background text-foreground">{screen()}</View>
     </SubjectColor.Provider>
   );

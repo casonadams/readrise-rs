@@ -6,6 +6,7 @@ import type { CourseId, LessonId } from "./src/core/course";
 import { itemStatsOf, lessonKey, localDay, recordAnswers, recordLesson, streakOn } from "./src/core/progress";
 import type { ActivityResult } from "./src/core/scoring";
 import { type LessonSession, resumeOrStart } from "./src/core/session";
+import { mixturesPack } from "./src/courses/mixtures-and-solutions/pack";
 import { statesOfMatterPack } from "./src/courses/states-of-matter/pack";
 import type { CoursePack } from "./src/ui/course-pack";
 import { SubjectColor } from "./src/ui/kit/theme";
@@ -18,7 +19,7 @@ import { sessionStore } from "./src/ui/session-store";
 type Route = { readonly name: "path" } | { readonly name: "lesson"; readonly courseId: CourseId; readonly lessonId: LessonId };
 
 /** The installed courses, in learning order. */
-const packs: readonly CoursePack[] = [statesOfMatterPack];
+const packs: readonly CoursePack[] = [statesOfMatterPack, mixturesPack];
 const catalog = new Catalog(packs.map((p) => p.course));
 const store = createProgressStore();
 const nav = createNavStack<Route>([{ name: "path" }]);

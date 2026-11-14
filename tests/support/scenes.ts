@@ -1,12 +1,16 @@
 import { expect } from "nsh/test";
 import type { App } from "nsh/test";
-import type { SceneSpec } from "../../src/courses/states-of-matter/types";
+import type { SceneSpec as MixturesScene } from "../../src/courses/mixtures-and-solutions/types";
+import type { AnySceneSpec } from "./installed";
 import { changeName, waterStateAt } from "../../src/science/matter";
 
 const states = ["solid", "liquid", "gas"] as const;
 
 /** What `scene` shows at `step`. Pop-in parts are checked once the step has settled. */
-export async function expectScene(app: App, scene: SceneSpec, step: number): Promise<void> {
+export async function expectScene(app: App, scene: AnySceneSpec, step: number): Promise<void> {
+  if (scene.id === "dissolving" || scene.id === "meltOrDissolve" || scene.id === "mass" || scene.id === "spoons") {
+    return expectMixturesScene(app, scene);
+  }
   switch (scene.id) {
     case "matter":
       expect(app.shows("text:Matter")).toBe(true);
@@ -58,5 +62,26 @@ export async function expectScene(app: App, scene: SceneSpec, step: number): Pro
       if (change !== null) expect(app.shows(`text:${change}`)).toBe(true);
       return;
     }
+  }
+}
+
+function expectMixturesScene(app: App, scene: MixturesScene): void {
+  switch (scene.id) {
+    case "dissolving":
+      expect(app.shows("text:Sugar: 12")).toBe(true);
+      expect(app.shows("text:/^In the cube: \\d+$/")).toBe(true);
+      return;
+    case "meltOrDissolve":
+      for (const text of ["Ice in a warm room", "Sugar in water", "Only water", "Water + sugar"]) {
+        expect(app.shows(`text:${text}`)).toBe(true);
+      }
+      return;
+    case "mass":
+      expect(app.shows("label:Scale reads 110 grams")).toBe(true);
+      return;
+    case "spoons":
+      expect(app.shows("text:/^Spoons: \\d+$/")).toBe(true);
+      expect(app.shows("text:/^Dissolved: \\d+$/")).toBe(true);
+      return;
   }
 }

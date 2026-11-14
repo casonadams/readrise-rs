@@ -1,19 +1,18 @@
 import { describe, expect, open, test } from "nsh/test";
+import { activitiesOf, type AnyExperimentId } from "../support/installed";
 import { openLessonActivity } from "../support/open";
 import type { App } from "nsh/test";
 import type { PredictActivity } from "../../src/core/course";
 import { type Confidence, confidences, predictResult, predictResultText } from "../../src/core/sessions/predict";
-import { statesOfMatter } from "../../src/courses/states-of-matter/course";
-import type { ExperimentId, ScienceActivity } from "../../src/courses/states-of-matter/types";
 import { predictionTitle } from "../../src/ui/activities/predict";
 import { rightOf } from "../support/choices";
 import { viewports } from "../support/viewports";
 
-type Predict = PredictActivity<ExperimentId>;
+type Predict = PredictActivity<AnyExperimentId>;
 
 /** What a learner sees of each experiment before its result, and once it has reported. */
 const experimentViews: Record<
-  ExperimentId,
+  AnyExperimentId,
   {
     readonly before: readonly string[];
     readonly after: readonly string[];
@@ -47,6 +46,28 @@ const experimentViews: Record<
     after: ["text:In the glass: 20", "text:In the air: 10"],
     drive: (app, reach, done) => dragUntil(app, "label:Time", reach, done),
   },
+  dissolving: {
+    before: ["label:Stir", "text:Sugar: 12", "text:In the cube: 12"],
+    after: ["text:In the cube: 0", "text:Hidden, not gone"],
+    drive: (app, reach, done) => dragUntil(app, "label:Stir", reach, done),
+  },
+  meltOrDissolve: {
+    before: ["label:Time", "text:Ice in a warm room", "text:Sugar in water", "text:Only water", "text:Water + sugar"],
+    after: ["text:Only water", "text:Water + sugar"],
+    drive: (app, reach, done) => dragUntil(app, "label:Time", reach, done),
+  },
+  mass: {
+    before: ["label:Stir", "label:Scale reads 110 grams"],
+    after: ["label:Scale reads 110 grams", "text:No particle left the glass"],
+    drive: (app, reach, done) => dragUntil(app, "label:Stir", reach, done),
+  },
+  spoons: {
+    before: ["label:Add a spoon", "text:Spoons: 0", "text:Dissolved: 0"],
+    after: ["text:Spoons: 6", "text:Dissolved: 3", "text:Full: the rest stays at the bottom"],
+    drive: async (app) => {
+      for (let i = 0; i < 6; i++) await app.press("label:Add a spoon");
+    },
+  },
 };
 
 /** Slider drags move the value relative to where it is, so keep stepping until the experiment has reported. */
@@ -57,11 +78,7 @@ async function dragUntil(app: App, slider: string, reach: number, done: () => bo
   }
 }
 
-const predicts = statesOfMatter.lessons.flatMap((lesson, lessonIndex) =>
-  lesson.activities.flatMap((activity: ScienceActivity, index) =>
-    activity.kind === "predict" ? [{ lesson: lessonIndex, activity: index, predict: activity }] : [],
-  ),
-);
+const predicts = activitiesOf<Predict>("predict");
 
 /** One whole prediction: pick, commit to a confidence, run the experiment, read the result, continue. */
 async function walkPredict(app: App, p: Predict, pick: number, confidence: Confidence, dragReach: number): Promise<void> {
@@ -123,15 +140,14 @@ test("a prediction is tested, revealed and worth its XP without a mistake", asyn
 
 for (const viewport of viewports) {
   describe(viewport.name, () => {
-    for (const { lesson, activity, predict } of predicts) {
-      const title = statesOfMatter.lessons[lesson].title;
+    for (const { at, title, activity: predict } of predicts) {
       const wrong = predict.choices.findIndex((c) => !c.right);
       const dragReach = viewport.width / 2 - 10;
 
       test(
         `${title}: a missed prediction shows the pick, the confidence row, the try-it panel and the result`,
         async () => {
-          const app = await openLessonActivity(viewport, lesson, activity);
+          const app = await openLessonActivity(viewport, at);
           await walkPredict(app, predict, wrong, "Pretty sure", dragReach);
         },
         90000,
@@ -140,7 +156,7 @@ for (const viewport of viewports) {
       test(
         `${title}: a called prediction shows the result without the right-answer line`,
         async () => {
-          const app = await openLessonActivity(viewport, lesson, activity);
+          const app = await openLessonActivity(viewport, at);
           await walkPredict(app, predict, predict.choices.findIndex((c) => c.right), "Totally sure", dragReach);
         },
         90000,

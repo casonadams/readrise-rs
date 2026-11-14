@@ -1,5 +1,23 @@
 # Every course/item id that has shipped. Learners' answers are stored
 # under these ids, so never rename or remove one; add new ids in sorted order.
+mixtures-and-solutions/dissolving-see
+mixtures-and-solutions/dissolving-solution
+mixtures-and-solutions/dissolving-where
+mixtures-and-solutions/how-much-saturated
+mixtures-and-solutions/how-much-stir
+mixtures-and-solutions/how-much-warm-heat
+mixtures-and-solutions/how-much-warm-mass
+mixtures-and-solutions/how-much-warm-water
+mixtures-and-solutions/mass-evaporates
+mixtures-and-solutions/mass-salt
+mixtures-and-solutions/mass-warm-ice-cream
+mixtures-and-solutions/mass-warm-see
+mixtures-and-solutions/mass-why-same
+mixtures-and-solutions/melting-ice-substances
+mixtures-and-solutions/melting-needs
+mixtures-and-solutions/melting-sugar-tea
+mixtures-and-solutions/melting-warm-solution
+mixtures-and-solutions/melting-warm-where
 states-of-matter/changes-adds-energy
 states-of-matter/changes-cold-glass
 states-of-matter/changes-ice-mass

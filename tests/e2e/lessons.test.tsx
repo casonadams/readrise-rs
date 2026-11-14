@@ -1,17 +1,26 @@
 import { describe, expect, open, test } from "nsh/test";
 import type { App } from "nsh/test";
-import type { Choice, Course } from "../../src/core/course";
+import type { AnyActivity, Choice, Course } from "../../src/core/course";
+import { mixturesAndSolutions } from "../../src/courses/mixtures-and-solutions/course";
+import type { MixturesActivity } from "../../src/courses/mixtures-and-solutions/types";
 import { statesOfMatter } from "../../src/courses/states-of-matter/course";
-import type { ExperimentId, ScienceActivity, ScienceLesson } from "../../src/courses/states-of-matter/types";
+import type { ScienceActivity, ScienceLesson } from "../../src/courses/states-of-matter/types";
 import { rightOf, wrongOf } from "../support/choices";
+import type { AnyExperimentId } from "../support/installed";
 import { type Viewport, viewports } from "../support/viewports";
 
-function progressBefore(course: Course<ScienceActivity>, lessonIndex: number): string {
-  const stars = Object.fromEntries(course.lessons.slice(0, lessonIndex).map((l) => [`${course.id}/${l.id}`, 3]));
+/** The courses in the order App.tsx installs them. */
+const installed: readonly Course<AnyActivity>[] = [statesOfMatter, mixturesAndSolutions];
+
+/** Saved progress with every lesson before `course`'s `lessonIndex`-th starred, earlier courses included. */
+function progressBefore(course: Course<AnyActivity>, lessonIndex: number): string {
+  const done = installed.slice(0, installed.indexOf(course)).flatMap((c) => c.lessons.map((l) => `${c.id}/${l.id}`));
+  done.push(...course.lessons.slice(0, lessonIndex).map((l) => `${course.id}/${l.id}`));
+  const stars = Object.fromEntries(done.map((key) => [key, 3]));
   return JSON.stringify({ xp: 0, streak: 0, lastPractice: null, lastLesson: null, stars });
 }
 
-const experimentSteps: Record<ExperimentId, (app: App) => Promise<void>> = {
+const experimentSteps: Record<AnyExperimentId, (app: App) => Promise<void>> = {
   balloon: async (app) => {
     for (let i = 0; i < 4; i++) await app.press("label:Pump");
   },
@@ -19,6 +28,12 @@ const experimentSteps: Record<ExperimentId, (app: App) => Promise<void>> = {
   heatGas: (app) => app.drag("label:Heat", { x: 400 }),
   stove: (app) => app.drag("label:Stove", { x: 400 }),
   evaporation: (app) => app.drag("label:Time", { x: 400 }),
+  dissolving: (app) => app.drag("label:Stir", { x: 400 }),
+  meltOrDissolve: (app) => app.drag("label:Time", { x: 400 }),
+  mass: (app) => app.drag("label:Stir", { x: 400 }),
+  spoons: async (app) => {
+    for (let i = 0; i < 6; i++) await app.press("label:Add a spoon");
+  },
 };
 
 const goalButton = () => "label:/^(Goal reached! Next goal|Finish)$/";
@@ -88,7 +103,7 @@ async function playWhoIsRight(app: App, who: WhoIsRight): Promise<void> {
 }
 
 /** Plays one activity the way a learner who makes a mistake would, so feedback, hints and reasons all show. */
-async function play(app: App, activity: ScienceActivity, reach: number): Promise<void> {
+async function play(app: App, activity: ScienceActivity | MixturesActivity, reach: number): Promise<void> {
   switch (activity.kind) {
     case "quiz":
       return playQuiz(app, activity);
@@ -117,14 +132,14 @@ async function play(app: App, activity: ScienceActivity, reach: number): Promise
   }
 }
 
-async function playLesson(viewport: Viewport, index: number): Promise<App> {
-  const lesson: ScienceLesson = statesOfMatter.lessons[index];
+async function playLesson(viewport: Viewport, course: Course<ScienceActivity | MixturesActivity>, index: number) {
+  const lesson = course.lessons[index];
   const app = await open("../../App.tsx", {
     width: viewport.width,
     height: viewport.height,
     reducedMotion: true,
     clock: {},
-    storage: { "progress.v1": progressBefore(statesOfMatter, index) },
+    storage: { "progress.v1": progressBefore(course, index) },
   });
   await app.press(`label:${lesson.title}, start here`);
   for (const [i, activity] of lesson.activities.entries()) {
@@ -136,7 +151,7 @@ async function playLesson(viewport: Viewport, index: number): Promise<App> {
   const saved = JSON.parse(app.storage()["progress.v1"]);
   for (const activity of lesson.activities) {
     if (activity.kind !== "quiz" || activity.role !== "check") continue;
-    for (const q of activity.questions) expect(saved.items[`${statesOfMatter.id}/${q.id}`]?.seen).toBe(1);
+    for (const q of activity.questions) expect(saved.items[`${course.id}/${q.id}`]?.seen).toBe(1);
   }
   return app;
 }
@@ -178,13 +193,16 @@ test("a lesson left halfway carries on at the same step", async () => {
 
 for (const viewport of viewports) {
   describe(viewport.name, () => {
-    statesOfMatter.lessons.forEach((lesson, index) => {
-      test(`plays the ${lesson.title} lesson to the end and saves a star`, async () => {
-        const app = await playLesson(viewport, index);
-        await app.press("label:Back to the path");
-        await app.waitFor(`label:/^${lesson.title}, [123] of 3 stars$/`);
-        expect(app.count(`label:/^${lesson.title}, [123] of 3 stars$/`)).toBe(1);
-      }, 60000);
-    });
+    for (const course of [statesOfMatter, mixturesAndSolutions]) {
+      course.lessons.forEach((lesson, index) => {
+        test(`plays ${course.title}, ${lesson.title} to the end and saves a star`, async () => {
+          const app = await playLesson(viewport, course, index);
+          const starred = `label:/^${lesson.title.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}, [123] of 3 stars$/`;
+          await app.press("label:Back to the path");
+          await app.waitFor(starred);
+          expect(app.count(starred)).toBe(1);
+        }, 60000);
+      });
+    }
   });
 }
