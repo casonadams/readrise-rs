@@ -97,6 +97,8 @@ none.
   screen does the explaining.
 - Use concrete, everyday situations (balloons, puddles, a cold glass) before abstract statements.
 - Classmates in "Who's right?" come from `src/science/classmates.ts`; keep the cast diverse and vary who is right.
+- Alex (`src/ui/kit/alex.tsx`) is the guide: hosts debates, gives hints, reacts to predictions, cheers at the end.
+  Alex never makes a claim in a debate; a guide who is always right teaches kids to tap Alex instead of thinking.
 - Choices come in a new order on every attempt (`attemptActivities`), so never write "all of the above" or other
   text that points at other choices; `courseIssues` rejects it. Mark a question `ordered: true` only when its
   order means something (numbers, a scale, yes then no).

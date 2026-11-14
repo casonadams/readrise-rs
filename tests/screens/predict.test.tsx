@@ -111,6 +111,7 @@ async function walkPredict(app: App, p: Predict, pick: number, confidence: Confi
 
   expect(app.shows(`text:${predictionTitle(right, confidence)}`)).toBe(true);
   expect(app.shows(`text:${predictResultText(p, { prediction: pick, confidence, observed: true })}`)).toBe(true);
+  expect(app.shows("label:Alex")).toBe(true);
   if (!right) expect(app.shows(`text:${rightOf(p.choices).text}`)).toBe(true);
   for (const selector of view.after) expect(app.shows(selector)).toBe(true);
   expect(app.shows("label:Continue")).toBe(true);

@@ -7,6 +7,7 @@ describe("lesson result", () => {
   test("a perfect lesson shows three stars and offers the next lesson", async () => {
     const app = await result({ xp: 45, mistakes: 0 }, "States", 3);
     expect(app.texts()).toContain("Perfect!");
+    expect(app.shows("label:Alex")).toBe(true);
     expect(app.count("label:3 of 3 stars")).toBe(1);
     expect(app.count("label:45 XP earned")).toBe(1);
     expect(app.texts()).toContain("3 day streak");

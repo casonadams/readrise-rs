@@ -32,7 +32,8 @@ async function walkWhoIsRight(app: App, who: WhoIsRight): Promise<void> {
   const names = who.claims.map((claim) => `text:${claim.kid.name}`);
   expectShown(app, [
     `text:${who.situation}`,
-    "text:Tap the one who is right.",
+    `text:/^${who.claims[0].kid.name}.* and ${who.claims[who.claims.length - 1].kid.name} disagree\. Tap the one who is right\.$/`,
+    "label:Alex",
     ...names,
     ...who.claims.map((_, i) => claimLabel(who, i, "open")),
   ]);
@@ -65,6 +66,7 @@ async function walkWhoIsRight(app: App, who: WhoIsRight): Promise<void> {
     `text:${who.explanation}`,
     "label:Continue",
   ]);
+  expect(app.count("label:Alex")).toBe(2);
   await app.press("label:Continue");
   expect(app.texts().some((t) => t.startsWith("done: "))).toBe(true);
 }

@@ -2,6 +2,7 @@ import { Scroll, signal, Text, View } from "nsh";
 import { type Claim, feedbackOf, type WhoIsRightActivity } from "../../core/course";
 import { pickClaim, type WhoIsRightState, whoIsRightResult, whoIsRightStart } from "../../core/sessions/who-is-right";
 import { ActivityHeader } from "../kit/activity-header";
+import { AlexAvatar, AlexSays } from "../kit/alex";
 import { AnswerPanel } from "../kit/answer-panel";
 import { FeedbackBanner } from "../kit/feedback-banner";
 import { KidAvatar } from "../kit/kid-avatar";
@@ -43,7 +44,7 @@ export function WhoIsRightView(props: ActivityProps<WhoIsRightActivity>) {
     <View class="flex-1 gap-3 px-5 pb-5 pt-2">
       <ActivityHeader kind="whoIsRight" />
       <Text class="text-2xl font-bold leading-snug">{activity.situation}</Text>
-      <Text class="text-base text-zinc-500">Tap the one who is right.</Text>
+      <AlexSays message={`${namesOf(activity.claims)} disagree. Tap the one who is right.`} />
       <Scroll class="-mx-5 flex-1" contentClass="gap-3.5 px-5 pb-2">
         {activity.claims.map((claim, i) => (
           <Shake trigger={shakes()[i] ?? 0}>
@@ -62,11 +63,18 @@ export function WhoIsRightView(props: ActivityProps<WhoIsRightActivity>) {
         <AnswerPanel
           title={`Yes! ${activity.claims.find((c) => c.says.right)?.kid.name ?? ""} is right.`}
           explanation={activity.explanation}
+          speaker={<AlexAvatar size={36} />}
           onContinue={finish}
         />
       </If>
     </View>
   );
+}
+
+/** "Mia and Leo", "Mia, Leo and Ava": who is in the debate. */
+function namesOf(claims: readonly Claim[]): string {
+  const names = claims.map((c) => c.kid.name);
+  return names.length < 2 ? names.join("") : `${names.slice(0, -1).join(", ")} and ${names[names.length - 1]}`;
 }
 
 function ClaimCard(props: { claim: Claim; state: OptionState; avatarOnRight: boolean; onPress: () => void }) {

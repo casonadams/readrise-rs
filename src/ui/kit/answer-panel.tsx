@@ -12,6 +12,8 @@ export function AnswerPanel(props: {
   color?: string;
   icon?: string;
   lead?: JSX.Element;
+  /** Who says the explanation, drawn beside it. */
+  speaker?: JSX.Element;
 }) {
   const motion = createMotion({ enter: "fadeInUp" });
   const color = () => props.color ?? feedbackColors.correct;
@@ -29,7 +31,10 @@ export function AnswerPanel(props: {
         </Text>
       </View>
       {props.lead}
-      <Text class="text-lg leading-snug">{props.explanation}</Text>
+      <View class="flex-row items-start gap-2.5">
+        {props.speaker}
+        <Text class="flex-1 text-lg leading-snug">{props.explanation}</Text>
+      </View>
       <View class="mt-2">
         <PrimaryButton label="Continue" color={color()} onPress={props.onContinue} />
       </View>

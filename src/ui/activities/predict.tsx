@@ -13,6 +13,7 @@ import {
   predictStart,
 } from "../../core/sessions/predict";
 import { ActivityHeader } from "../kit/activity-header";
+import { AlexAvatar } from "../kit/alex";
 import { AnswerPanel } from "../kit/answer-panel";
 import { OptionTile } from "../kit/option-tile";
 import { tint } from "../kit/tint";
@@ -128,6 +129,7 @@ export function PredictView<E>(props: ActivityProps<PredictActivity<E>> & { rend
             lead={right() ? undefined : <AnswerLine text={activity.choices.find((c) => c.right)?.text ?? ""} />}
             color={right() ? feedbackColors.correct : predictColor}
             icon={right() ? "\u2713" : "\u2728"}
+            speaker={<AlexAvatar size={36} />}
             onContinue={finish}
           />
         </If>

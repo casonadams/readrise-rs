@@ -4,6 +4,7 @@ import { drop as dropInto, finishSort, showSortHint, type SortState, sortStart }
 import { ActivityHeader } from "../kit/activity-header";
 import { PrimaryButton } from "../kit/button";
 import { FadeIn } from "../kit/fade-in";
+import { AlexSays } from "../kit/alex";
 import { FeedbackBanner } from "../kit/feedback-banner";
 import { Shake } from "../kit/shake";
 import { TextAction } from "../kit/text-action";
@@ -38,6 +39,11 @@ export function SortView(props: ActivityProps<SortActivity>) {
   let cardCentre: { x: number; y: number } | null = null;
   let rects: (Rect | undefined)[] = [];
   const apply = stepper(state, props.complete);
+  const hint = () => (state().feedback?.kind === "hint" ? state().feedback : undefined);
+  const banner = () => {
+    const feedback = state().feedback;
+    return feedback === null || feedback.kind === "hint" ? undefined : { ...feedback, kind: feedback.kind };
+  };
 
   const binAt = (x: number, y: number): number | null => {
     const i = rects.findIndex(
@@ -165,10 +171,11 @@ export function SortView(props: ActivityProps<SortActivity>) {
         </Each>
       </View>
       <Scroll class="-mx-5 flex-1" contentClass="gap-3 px-5 pb-1">
-        <If when={state().feedback}>
-          {(feedback) => (
-            <FeedbackBanner kind={feedback().kind} title={feedback().title} message={feedback().message} />
-          )}
+        <If when={hint()}>
+          {(hint) => <AlexSays title={hint().title} message={hint().message} color={feedbackColors.hint} />}
+        </If>
+        <If when={banner()}>
+          {(banner) => <FeedbackBanner kind={banner().kind} title={banner().title} message={banner().message} />}
         </If>
         <If when={state().next < total && activity.hint !== undefined && !state().hintShown}>
           <TextAction label="Need a hint?" onPress={() => state.set(showSortHint(activity, state()))} />

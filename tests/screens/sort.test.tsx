@@ -34,7 +34,7 @@ async function walkSort(app: App, sort: Sort): Promise<void> {
 
   await app.press("text:Need a hint?");
   await app.waitFor(`text:${sort.hint}`);
-  expectShown(app, ["text:Hint", `text:${sort.hint}`, `text:${sort.items[0].label}`]);
+  expectShown(app, ["text:Hint", "label:Alex", `text:${sort.hint}`, `text:${sort.items[0].label}`]);
 
   const wrongBin = (sort.items[0].bin + 1) % sort.bins.length;
   await app.press(`label:${sort.bins[wrongBin]}`);

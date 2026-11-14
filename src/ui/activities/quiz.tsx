@@ -11,6 +11,7 @@ import {
   showHint,
 } from "../../core/sessions/quiz";
 import { ActivityHeader } from "../kit/activity-header";
+import { AlexSays } from "../kit/alex";
 import { AnswerPanel } from "../kit/answer-panel";
 import { FadeIn } from "../kit/fade-in";
 import { FeedbackBanner } from "../kit/feedback-banner";
@@ -98,7 +99,7 @@ export function QuizView<V>(props: ActivityProps<QuizActivity<V>> & { renderVisu
           ))}
         </View>
         <If when={missMessage(q.choices, state().wrong, state().answered)}>{(message) => <FeedbackBanner kind="wrong" message={message()} />}</If>
-        <If when={hintMessage()}>{(message) => <FeedbackBanner kind="hint" title="Hint" message={message()} />}</If>
+        <If when={hintMessage()}>{(message) => <AlexSays title="Hint" message={message()} color={feedbackColors.hint} />}</If>
         <If when={q.hint !== undefined && !state().answered && !state().hintShown}>
           <TextAction label="Need a hint?" onPress={() => state.set(showHint(state()))} />
         </If>

@@ -1,6 +1,7 @@
 import { cleanup, createMotion, reduceMotion, signal, Text, View } from "nsh";
 import type { ActivityResult } from "../core/scoring";
 import { starsFor } from "../core/scoring";
+import { AlexAvatar } from "./kit/alex";
 import { PrimaryButton } from "./kit/button";
 import { Confetti } from "./kit/confetti";
 import { SubjectColor } from "./kit/theme";
@@ -52,6 +53,7 @@ export function LessonResult(props: {
     <View class="flex-1 bg-background text-foreground">
       <View class="flex-1 items-center p-6 pt-[calc(env(safe-area-inset-top)+24px)] pb-[calc(env(safe-area-inset-bottom)+24px)]">
         <View class="flex-1 items-center justify-center gap-6">
+          <AlexAvatar size={88} />
           <Text class="text-4xl font-extrabold text-foreground">{headlines[stars]}</Text>
           <View class="flex-row gap-2" accessible accessibilityLabel={`${stars} of 3 stars`}>
             <Each of={[0, 1, 2]}>{(i) => <PoppingStar earned={i() < stars} index={i()} />}</Each>

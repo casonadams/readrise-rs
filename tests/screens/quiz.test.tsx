@@ -72,7 +72,7 @@ async function walkWithMistakes(app: App, quiz: Quiz): Promise<void> {
       expectShown(app, [
         ...choiceTiles(q.choices, wrong, false),
         `text:${c.feedback}`,
-        ...(hintVisible && q.hint !== undefined ? [`text:${q.hint}`] : []),
+        ...(hintVisible && q.hint !== undefined ? [`text:${q.hint}`, "label:Alex"] : []),
       ]);
     }
 
