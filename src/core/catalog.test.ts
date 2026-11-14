@@ -1,6 +1,6 @@
 import { describe, expect, test } from "nsh/test";
 import { Catalog, summarizeSubjects } from "./catalog";
-import type { Course } from "./course";
+import { type Course, courseId, lessonId } from "./course";
 import { emptyProgress, type Progress } from "./progress";
 import { course, maths, type Plain, reading } from "./test-courses";
 
@@ -21,7 +21,7 @@ describe("rejects an inconsistent catalog", () => {
     ["a course without lessons", [course("empty", [])], "has no lessons"],
     ["a duplicate lesson", [course("dup", ["a", "a"])], "duplicate lesson dup/a"],
     ["one subject id with two titles", [letters, course("y", ["a"], { subject: { ...reading, title: "Read" } })], "Read"],
-    ["a lesson without activities", [{ ...letters, lessons: [{ id: "a", title: "A", activities: [] }] }], "no activities"],
+    ["a lesson without activities", [{ ...letters, lessons: [{ id: lessonId("a"), title: "A", activities: [] }] }], "no activities"],
   ];
   for (const [name, courses, message] of cases) {
     test(name, () => {
@@ -35,8 +35,8 @@ test("the same lesson id may appear in different courses", () => {
 });
 
 test("unknown ids are rejected", () => {
-  expect(() => catalog.course("nope")).toThrow("unknown course nope");
-  expect(() => catalog.lesson("letters", "z")).toThrow("unknown lesson letters/z");
+  expect(() => catalog.course(courseId("nope"))).toThrow("unknown course nope");
+  expect(() => catalog.lesson(courseId("letters"), lessonId("z"))).toThrow("unknown lesson letters/z");
 });
 
 test("lessons unlock in order within a course", () => {

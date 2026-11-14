@@ -3,6 +3,7 @@ import type {
   ChoiceQuestion,
   ExplainerActivity,
   Lesson,
+  LessonId,
   PredictActivity,
   SortActivity,
   WhoIsRightActivity,
@@ -13,8 +14,7 @@ import type {
  * `E`, `S` and `V` are the course's experiments, scenes and quiz pictures; `X` its own practice activities.
  */
 export interface ScienceLessonParts<E, S, V, X> {
-  /** Stored in saved progress: never rename, add a new lesson instead. */
-  readonly id: string;
+  readonly id: LessonId;
   readonly title: string;
   /** Questions on earlier lessons; the first lesson of a course has none. */
   readonly warmUp?: readonly ChoiceQuestion<V>[];

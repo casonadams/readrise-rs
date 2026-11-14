@@ -1,4 +1,4 @@
-import type { Course, Lesson, Subject } from "./course";
+import { type Course, courseId, type Lesson, lessonId, type Subject } from "./course";
 
 export type Plain = { readonly kind: "plain" };
 
@@ -8,7 +8,7 @@ export const reading: Subject = { id: "reading", title: "Reading", emoji: "R", c
 export const maths: Subject = { id: "maths", title: "Maths", emoji: "M", color: "#43A047" };
 
 export function lesson(id: string): Lesson<Plain> {
-  return { id, title: id.toUpperCase(), activities: [plain] };
+  return { id: lessonId(id), title: id.toUpperCase(), activities: [plain] };
 }
 
 export function course(
@@ -17,11 +17,11 @@ export function course(
   options: { subject?: Subject; requires?: readonly string[] } = {},
 ): Course<Plain> {
   return {
-    id,
+    id: courseId(id),
     title: id,
     grade: "grade1",
     subject: options.subject ?? reading,
-    requires: options.requires ?? [],
+    requires: (options.requires ?? []).map(courseId),
     lessons: lessonIds.map(lesson),
   };
 }

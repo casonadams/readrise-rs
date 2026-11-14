@@ -1,6 +1,7 @@
 import { mount, signal } from "nsh";
 import { createNavStack, NavPage, NavStack } from "nsh/base";
 import { Catalog } from "./src/core/catalog";
+import type { CourseId, LessonId } from "./src/core/course";
 import { localDay, recordLesson, streakOn } from "./src/core/progress";
 import type { ActivityResult } from "./src/core/scoring";
 import { statesOfMatterPack } from "./src/courses/states-of-matter/pack";
@@ -11,7 +12,7 @@ import { LessonRunner } from "./src/ui/lesson-runner";
 import { PathScreen } from "./src/ui/path-screen";
 import { createProgressStore } from "./src/ui/progress-store";
 
-type Route = { readonly name: "path" } | { readonly name: "lesson"; readonly courseId: string; readonly lessonId: string };
+type Route = { readonly name: "path" } | { readonly name: "lesson"; readonly courseId: CourseId; readonly lessonId: LessonId };
 
 /** The installed courses, in learning order. */
 const packs: readonly CoursePack[] = [statesOfMatterPack];
@@ -20,7 +21,7 @@ const store = createProgressStore();
 const nav = createNavStack<Route>([{ name: "path" }]);
 const today = () => localDay(new Date());
 
-function LessonPage(props: { courseId: string; lessonId: string }) {
+function LessonPage(props: { courseId: CourseId; lessonId: LessonId }) {
   const { course, lesson } = catalog.lesson(props.courseId, props.lessonId);
   const outcome = signal<ActivityResult | null>(null);
   const finish = (result: ActivityResult) => {

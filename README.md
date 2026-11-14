@@ -14,7 +14,8 @@ Live web build: https://casonadams.github.io/readrise-rs/ (deployed by `.github/
 
 Layers import downwards only: `core`, then `ui`, then kits like `src/science`, then courses; a course never imports
 another course, and a course's content (`course.ts` and what it imports) loads without `nsh`.
-`scripts/architecture.ts` checks this, and `bun scripts/test.ts` runs it first.
+`scripts/architecture.ts` checks this, and `bun scripts/test.ts` runs it first, with `scripts/locks.ts`, which
+checks that every shipped course, lesson and question id in `ids.lock` and `items.lock` still exists.
 
 Lessons are data: experiments and scenes are referenced by id (`ExperimentId`, `SceneSpec` in `src/courses/states-of-matter/types.ts`).
 `courseIssues` checks the lesson design rules (warm-up, one prediction before the first explainer, "Who's right?" last,

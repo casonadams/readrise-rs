@@ -1,11 +1,11 @@
-import { right, wrong } from "../../../core/course";
+import { itemId, lessonId, right, wrong } from "../../../core/course";
 import { leo, mia } from "../../../science/classmates";
 import { scienceLesson } from "../../../science/lesson";
 import type { ScienceLesson } from "../types";
 
 // Is air matter? Targets "air weighs nothing" and "light is matter".
 export const matterLesson: ScienceLesson = scienceLesson({
-  id: "matter",
+  id: lessonId("matter"),
   title: "Matter",
   predict: {
     question: "Two empty balloons balance on a scale. What happens if you pump air into one?",
@@ -59,6 +59,7 @@ export const matterLesson: ScienceLesson = scienceLesson({
   },
   check: [
     {
+      id: itemId("matter-air"),
       prompt: "Is air matter?",
       choices: [right("Yes"), wrong("No", "The full balloon tipped the scale, so air has mass.")],
       hint: "Remember what the balloon did to the scale.",
@@ -73,6 +74,7 @@ export const matterLesson: ScienceLesson = scienceLesson({
         "Air has mass (it tipped the scale) and takes up space (it filled the balloon). That makes it matter.",
     },
     {
+      id: itemId("matter-atoms"),
       prompt: "What are atoms?",
       choices: [
         right("The tiny particles all matter is made of"),
@@ -83,6 +85,7 @@ export const matterLesson: ScienceLesson = scienceLesson({
       explanation: "Every kind of matter, solid, liquid, or gas, is made of atoms.",
     },
     {
+      id: itemId("matter-h2o-atoms"),
       prompt: "How many atoms are in one water molecule (H2O)?",
       choices: [
         wrong("1", "H2O names more than one atom: H, H, and O."),

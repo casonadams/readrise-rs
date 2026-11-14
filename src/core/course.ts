@@ -14,6 +14,31 @@ export type Grade =
   | "grade11"
   | "grade12";
 
+declare const idKind: unique symbol;
+
+/**
+ * A name stored in learners' saved progress: never rename or remove one, add a new one instead.
+ * `ids.lock` and `items.lock` list every one that has shipped; `scripts/locks.ts` checks them.
+ */
+type Id<Kind extends string> = string & { readonly [idKind]: Kind };
+
+export type CourseId = Id<"course">;
+export type LessonId = Id<"lesson">;
+/** A question, unique within its course: per-question progress is kept under it. */
+export type ItemId = Id<"item">;
+
+export function courseId(id: string): CourseId {
+  return id as CourseId;
+}
+
+export function lessonId(id: string): LessonId {
+  return id as LessonId;
+}
+
+export function itemId(id: string): ItemId {
+  return id as ItemId;
+}
+
 /** A school subject. Courses with the same subject share its card and colour. */
 export interface Subject {
   readonly id: string;
@@ -56,6 +81,7 @@ export interface Reason {
 }
 
 export interface ChoiceQuestion<Visual = never> {
+  readonly id: ItemId;
   readonly prompt: string;
   readonly choices: readonly Choice[];
   /** A nudge offered on request and after `hintAfterMisses` wrong picks. */
@@ -143,22 +169,28 @@ export type Activity<Experiment, Scene, Visual = never, Extra = never> =
 
 /** One node on the path: activities the runner plays in order. */
 export interface Lesson<A> {
-  /** Stored in saved progress: never rename, add a new lesson instead. */
-  readonly id: string;
+  readonly id: LessonId;
   readonly title: string;
   readonly activities: readonly A[];
 }
 
 /** An ordered set of lessons shown as one learning path. */
 export interface Course<A = unknown> {
-  /** Stable and unique across courses; progress is keyed by it. */
-  readonly id: string;
+  /** Unique across courses. */
+  readonly id: CourseId;
   readonly title: string;
   readonly grade: Grade;
   readonly subject: Subject;
-  /** Ids of courses that must be complete before this one opens. */
-  readonly requires: readonly string[];
+  /** Courses that must be complete before this one opens. */
+  readonly requires: readonly CourseId[];
   readonly lessons: readonly Lesson<A>[];
+}
+
+/** Every quiz question of `course`, warm-ups included, in lesson order. */
+export function courseQuestions(course: Course<{ readonly kind: string }>): ChoiceQuestion<unknown>[] {
+  return course.lessons.flatMap((lesson) =>
+    lesson.activities.flatMap((a) => (a.kind === "quiz" ? (a as QuizActivity<unknown>).questions : [])),
+  );
 }
 
 export const defaultMaxXp = 20;

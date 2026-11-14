@@ -1,4 +1,4 @@
-import type { Activity, Choice, ChoiceQuestion, Course, SortActivity } from "./course";
+import { type Activity, type Choice, type ChoiceQuestion, type Course, courseQuestions, type SortActivity } from "./course";
 
 type Kinded = { readonly kind: string };
 type CoreActivity = Activity<unknown, unknown, unknown>;
@@ -66,6 +66,10 @@ export function courseIssues(course: Course<Kinded>): string[] {
   const issues: string[] = [];
   const ids = course.lessons.map((l) => l.id);
   if (new Set(ids).size !== ids.length) issues.push(`${course.id}: lesson ids repeat`);
+  const items = courseQuestions(course).map((q) => q.id);
+  for (const id of new Set(items)) {
+    if (items.indexOf(id) !== items.lastIndexOf(id)) issues.push(`${course.id}: question id ${id} repeats`);
+  }
   course.lessons.forEach((lesson, i) => {
     issues.push(...arcIssues(lesson.id, i === 0, lesson.activities));
     for (const a of lesson.activities.filter(isCore)) {

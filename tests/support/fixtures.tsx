@@ -1,7 +1,9 @@
 import { Text, View } from "nsh";
 import {
   type ExplainerActivity,
+  itemId,
   type Lesson,
+  lessonId,
   type PredictActivity,
   type QuizActivity,
   right,
@@ -18,6 +20,7 @@ export const quiz: QuizActivity = {
   role: "check",
   questions: [
     {
+      id: itemId("keeps-shape"),
       prompt: "Which one keeps its shape?",
       choices: [
         wrong("Steam", "Steam is a gas, not a solid."),
@@ -28,6 +31,7 @@ export const quiz: QuizActivity = {
       explanation: "Ice keeps its shape.",
     },
     {
+      id: itemId("flows"),
       prompt: "Which one flows?",
       choices: [wrong("Rock", "A rock keeps its shape."), right("Water")],
       explanation: "Water flows.",
@@ -40,6 +44,7 @@ export const quizReason: QuizActivity = {
   role: "check",
   questions: [
     {
+      id: itemId("ice-solid"),
       prompt: "Is ice a solid?",
       choices: [right("Yes"), wrong("No", "Ice keeps its shape, so it is a solid.")],
       reason: {
@@ -142,7 +147,7 @@ export function experimentId(name: string): ExperimentId {
 type Step = { readonly kind: "step"; readonly name: string; readonly result: ActivityResult };
 
 export const steps: Lesson<Step> = {
-  id: "fixture",
+  id: lessonId("fixture"),
   title: "Fixture",
   activities: [
     { kind: "step", name: "One", result: { xp: 10, mistakes: 0 } },

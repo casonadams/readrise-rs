@@ -1,14 +1,15 @@
-import { right, wrong } from "../../../core/course";
+import { itemId, lessonId, right, wrong } from "../../../core/course";
 import { kai, lily } from "../../../science/classmates";
 import { scienceLesson } from "../../../science/lesson";
 import type { ScienceLesson } from "../types";
 
 // Changes of state and conservation of mass. Targets "boiling bubbles are air" and "evaporated water is gone".
 export const changesLesson: ScienceLesson = scienceLesson({
-  id: "changes",
+  id: lessonId("changes"),
   title: "Changes",
   warmUp: [
     {
+      id: itemId("changes-warm-gas-heated"),
       prompt: "When you heat a gas, its particles...",
       choices: [
         wrong("Get bigger", "Particles stay the same size when heated."),
@@ -19,6 +20,7 @@ export const changesLesson: ScienceLesson = scienceLesson({
       explanation: "Heat speeds particles up. Their size stays the same.",
     },
     {
+      id: itemId("changes-warm-not-matter"),
       prompt: "Which of these is NOT matter?",
       choices: [
         wrong("Steam", "Steam is water as a gas, so it is matter."),
@@ -81,6 +83,7 @@ export const changesLesson: ScienceLesson = scienceLesson({
   },
   check: [
     {
+      id: itemId("changes-ice-mass"),
       prompt: "A 20 g ice cube melts completely. What is the mass of the water?",
       choices: [
         wrong("Less than 20 g", "No particles escape, so no mass is lost."),
@@ -100,6 +103,7 @@ export const changesLesson: ScienceLesson = scienceLesson({
         "stays 20 g.",
     },
     {
+      id: itemId("changes-cold-glass"),
       prompt: "Drops of water form on a cold glass on a hot day. Where do they come from?",
       choices: [
         right("Water vapor in the air"),
@@ -117,6 +121,7 @@ export const changesLesson: ScienceLesson = scienceLesson({
       explanation: "Water vapor in the air touches the cold glass, loses energy, and condenses into liquid drops.",
     },
     {
+      id: itemId("changes-adds-energy"),
       prompt: "Which change needs thermal energy to be added?",
       choices: [
         wrong("Condensing", "Condensing removes energy: gas slows into liquid."),

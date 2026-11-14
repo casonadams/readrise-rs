@@ -1,4 +1,4 @@
-import type { Course, Lesson, Subject } from "./course";
+import type { Course, CourseId, Lesson, LessonId, Subject } from "./course";
 import { isCourseComplete, type Progress, starsOf } from "./progress";
 
 export interface LessonRef<A = unknown> {
@@ -40,13 +40,13 @@ export class Catalog<A = unknown> {
     this.courses = courses;
   }
 
-  course(id: string): Course<A> {
+  course(id: CourseId): Course<A> {
     const course = this.courses.find((c) => c.id === id);
     if (course === undefined) throw new Error(`unknown course ${id}`);
     return course;
   }
 
-  lesson(courseId: string, lessonId: string): LessonRef<A> {
+  lesson(courseId: CourseId, lessonId: LessonId): LessonRef<A> {
     const course = this.course(courseId);
     const lesson = course.lessons.find((l) => l.id === lessonId);
     if (lesson === undefined) throw new Error(`unknown lesson ${courseId}/${lessonId}`);

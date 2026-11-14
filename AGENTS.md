@@ -21,8 +21,13 @@ the user asks otherwise.
   colours, labels). Never add a flag that switches behaviour.
 - Activity logic is a pure state machine (`src/core/sessions/`, or a course's own like `heat-lab.ts`), tested
   without a screen; the view shows the state, forwards taps and applies each step with `stepper`.
-- Course and lesson ids are stored in learners' saved progress. Never rename or remove one; add a new lesson
-  instead.
+- Course, lesson and question ids (`courseId`, `lessonId`, `itemId`) are stored in learners' saved progress.
+  Never rename or remove one; add a new one instead. `ids.lock` and `items.lock` list every shipped id and
+  `scripts/locks.ts` fails if one disappears or a new one is not added; every quiz question has an `id`, unique
+  within its course.
+- Saved data lives under versioned keys (`progress.v1`). Only ever add fields, and read a missing field as its
+  default (`parseProgress`), so old saves keep loading; a change that cannot be additive needs a new key and a
+  migration.
 
 ## Colours and dark mode
 

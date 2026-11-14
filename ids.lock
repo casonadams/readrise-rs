@@ -1,0 +1,7 @@
+# Every course/lesson id that has shipped. Learners' progress is stored
+# under these ids, so never rename or remove one; add new ids in sorted order.
+states-of-matter
+states-of-matter/changes
+states-of-matter/heat
+states-of-matter/matter
+states-of-matter/states

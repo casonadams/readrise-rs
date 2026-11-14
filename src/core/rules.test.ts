@@ -3,8 +3,11 @@ import {
   type Activity,
   type ChoiceQuestion,
   type Course,
+  courseId,
   type ExplainerActivity,
+  itemId,
   type Lesson,
+  lessonId,
   type PredictActivity,
   type QuizActivity,
   right,
@@ -16,7 +19,7 @@ import { courseIssues } from "./rules";
 
 type A = Activity<string, string>;
 
-const question: ChoiceQuestion = { prompt: "W", choices: [right("a"), wrong("b", "f")], hint: "h", explanation: "e" };
+const question: ChoiceQuestion = { id: itemId("w"), prompt: "W", choices: [right("a"), wrong("b", "f")], hint: "h", explanation: "e" };
 const warmUp: QuizActivity = { kind: "quiz", role: "warmUp", questions: [question] };
 const predictA: PredictActivity<string> = {
   kind: "predict",
@@ -48,8 +51,8 @@ const debate: WhoIsRightActivity = {
 };
 
 function courseOf(...lessons: A[][]): Course<A> {
-  const ls: Lesson<A>[] = lessons.map((activities, i) => ({ id: `l${i}`, title: `L${i}`, activities }));
-  return { id: "c", title: "C", grade: "grade6", subject: { id: "s", title: "S", emoji: "", color: "" }, requires: [], lessons: ls };
+  const ls: Lesson<A>[] = lessons.map((activities, i) => ({ id: lessonId(`l${i}`), title: `L${i}`, activities }));
+  return { id: courseId("c"), title: "C", grade: "grade6", subject: { id: "s", title: "S", emoji: "", color: "" }, requires: [], lessons: ls };
 }
 
 const good = courseOf([predictA, explain, sortA, debate], [warmUp, predictA, explain, sortA, debate]);
@@ -74,6 +77,7 @@ describe("finds", () => {
     ["a repeated choice", courseOf([predictA, explain, debate], [withQuestion({ choices: [right("a"), wrong("a", "f")] }), predictA, explain, debate]), `"W": repeats a choice`],
     ["a wrong choice whose feedback is empty", courseOf([predictA, explain, debate], [withQuestion({ choices: [right("a"), wrong("b", " ")] }), predictA, explain, debate]), `"W": "b" does not say why it is wrong`],
     ["a reason with two right choices", courseOf([predictA, explain, debate], [withQuestion({ reason: { choices: [right("r"), right("s")] } }), predictA, explain, debate]), `"W" (why): has 2 right choices, not 1`],
+    ["a question id used twice", courseOf([predictA, explain, debate], [{ ...warmUp, questions: [question, question] }, predictA, explain, debate]), "c: question id w repeats"],
     ["an unused bin", courseOf([predictA, explain, { ...sortA, bins: ["b0", "b1", "b2"] }, debate]), `"S": a bin is never used`],
     ["a sort item that does not say why", courseOf([predictA, explain, { ...sortA, items: [{ label: "i0", bin: 0 }, { label: "i1", bin: 1, why: "w" }] }, debate]), `"i0": does not say why`],
   ];

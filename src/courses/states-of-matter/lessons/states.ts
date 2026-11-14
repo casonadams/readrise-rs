@@ -1,4 +1,4 @@
-import { right, wrong } from "../../../core/course";
+import { itemId, lessonId, right, wrong } from "../../../core/course";
 import { ava, sam } from "../../../science/classmates";
 import { scienceLesson } from "../../../science/lesson";
 import type { ScienceLesson } from "../types";
@@ -6,10 +6,11 @@ import type { ScienceLesson } from "../types";
 // Solid, liquid, gas as particle arrangements. Targets "air fills the gaps between particles" and
 // "particles are hard or cold like the whole".
 export const statesLesson: ScienceLesson = scienceLesson({
-  id: "states",
+  id: lessonId("states"),
   title: "States",
   warmUp: [
     {
+      id: itemId("states-warm-matter"),
       prompt: "Which of these is matter?",
       choices: [
         wrong("Sound", "Sound is energy moving through matter."),
@@ -20,6 +21,7 @@ export const statesLesson: ScienceLesson = scienceLesson({
       explanation: "Air has mass and takes up space, so it is matter.",
     },
     {
+      id: itemId("states-warm-made-of"),
       prompt: "What is all matter made of?",
       choices: [
         right("Tiny particles called atoms"),
@@ -73,6 +75,7 @@ export const statesLesson: ScienceLesson = scienceLesson({
   },
   check: [
     {
+      id: itemId("states-picture-gas"),
       prompt: "Which state of matter is this?",
       choices: [
         wrong("Solid", "Solid particles sit packed in rows. These fly around."),
@@ -94,6 +97,7 @@ export const statesLesson: ScienceLesson = scienceLesson({
       visual: { particles: "gas", energy: 0.7 },
     },
     {
+      id: itemId("states-picture-solid"),
       prompt: "Which state of matter is this?",
       choices: [
         right("Solid"),
@@ -118,6 +122,7 @@ export const statesLesson: ScienceLesson = scienceLesson({
       visual: { particles: "solid", energy: 0.3 },
     },
     {
+      id: itemId("states-pour"),
       prompt: "Why can you pour juice but not a wooden block?",
       choices: [
         right("Juice particles slide past each other"),

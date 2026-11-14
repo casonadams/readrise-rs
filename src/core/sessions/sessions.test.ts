@@ -1,5 +1,13 @@
 import { describe, expect, test } from "nsh/test";
-import { type PredictActivity, type QuizActivity, right, type SortActivity, type WhoIsRightActivity, wrong } from "../course";
+import {
+  itemId,
+  type PredictActivity,
+  type QuizActivity,
+  right,
+  type SortActivity,
+  type WhoIsRightActivity,
+  wrong,
+} from "../course";
 import { scoreXp, type Step } from "../scoring";
 import { commit, isTesting, observe, predict, predictResult, predictResultText, predictStart } from "./predict";
 import { isSettled, nextQuestion, pickAnswer, pickReason, type QuizState, quizStart, showHint } from "./quiz";
@@ -29,12 +37,14 @@ describe("quiz", () => {
     role: "check",
     questions: [
       {
+        id: itemId("q1"),
         prompt: "Q1",
         choices: [wrong("a", "f"), wrong("b", "f"), wrong("c", "f"), right("d")],
         explanation: "e",
         hint: "h",
       },
       {
+        id: itemId("q2"),
         prompt: "Q2",
         choices: [right("a"), wrong("b", "f")],
         explanation: "e",

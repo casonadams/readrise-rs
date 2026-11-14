@@ -1,14 +1,15 @@
-import { right, wrong } from "../../../core/course";
+import { itemId, lessonId, right, wrong } from "../../../core/course";
 import { noah, zoe } from "../../../science/classmates";
 import { scienceLesson } from "../../../science/lesson";
 import type { ScienceLesson } from "../types";
 
 // Temperature as particle speed. Targets "particles expand when heated".
 export const heatLesson: ScienceLesson = scienceLesson({
-  id: "heat",
+  id: lessonId("heat"),
   title: "Heat",
   warmUp: [
     {
+      id: itemId("heat-warm-slide"),
       prompt: "In which state do particles slide past each other?",
       choices: [
         wrong("Solid", "Solid particles are held in place. They only vibrate."),
@@ -19,6 +20,7 @@ export const heatLesson: ScienceLesson = scienceLesson({
       explanation: "Liquid particles touch but slide past each other.",
     },
     {
+      id: itemId("heat-warm-between"),
       prompt: "What is between the particles of a gas?",
       choices: [
         wrong("Air", "The particles are the air, so there is no air between them."),
@@ -70,6 +72,7 @@ export const heatLesson: ScienceLesson = scienceLesson({
   },
   check: [
     {
+      id: itemId("heat-steam-ice"),
       prompt: "Steam is much hotter than ice. How do their particles compare?",
       choices: [
         right("Steam particles move faster"),
@@ -90,6 +93,7 @@ export const heatLesson: ScienceLesson = scienceLesson({
       explanation: "Higher temperature means faster particles, so the steam particles move faster.",
     },
     {
+      id: itemId("heat-balloon-sun"),
       prompt: "A balloon left in the hot sun gets bigger. Why?",
       choices: [
         right("The air particles move faster and push harder"),
@@ -101,6 +105,7 @@ export const heatLesson: ScienceLesson = scienceLesson({
         "Heat speeds up the air particles. They hit the balloon walls harder and more often, pushing it outward.",
     },
     {
+      id: itemId("heat-freezing-point"),
       prompt: "At what temperature does water freeze?",
       choices: [
         wrong("-10\u00B0C", "Water is already ice at -10\u00B0C. It froze before that."),

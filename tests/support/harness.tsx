@@ -1,6 +1,6 @@
 import { host, mount, signal, Text, View } from "nsh";
 import type { JSX } from "nsh/jsx-runtime";
-import type { Lesson } from "../../src/core/course";
+import { type Lesson, lessonId } from "../../src/core/course";
 import type { ActivityResult } from "../../src/core/scoring";
 import { statesOfMatter } from "../../src/courses/states-of-matter/course";
 import { statesOfMatterPack } from "../../src/courses/states-of-matter/pack";
@@ -29,7 +29,7 @@ function Done(props: { result: ActivityResult }) {
 
 function InRunner<A>(props: { activity: A; render: (activity: A, complete: (r: ActivityResult) => void) => JSX.Element }) {
   const result = signal<ActivityResult | null>(null);
-  const lesson: Lesson<A> = { id: "harness", title: "Harness", activities: [props.activity] };
+  const lesson: Lesson<A> = { id: lessonId("harness"), title: "Harness", activities: [props.activity] };
   return (
     <If
       when={result()}
