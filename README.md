@@ -2,8 +2,7 @@
 
 Don't be a smart aleck. Be a Smart Alex: science courses for grades 5-8 (States of Matter; Mixtures and Solutions)
 where learners predict, get surprised, and argue a classmate out of a misconception. A TSX app on
-[Native Shell](https://nsh.dev), grown out of [Readrise](https://github.com/casonadams/readrise)'s Flutter science
-course.
+[Native Shell](https://nsh.dev).
 All app code is TSX, so lesson and UI changes ship as signed OTA packages without a new app build.
 Live web build: https://casonadams.github.io/smartalex/ (deployed by `.github/workflows/pages.yml` on pushes to `main`).
 
