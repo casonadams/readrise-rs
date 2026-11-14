@@ -1,5 +1,6 @@
 import { describe, expect, test } from "nsh/test";
-import { emptyProgress, parseProgress, recordLesson, starsOf, streakOn } from "./progress";
+import { itemId } from "./course";
+import { emptyProgress, itemStatsOf, parseProgress, recordAnswers, recordLesson, starsOf, streakOn } from "./progress";
 import { starsFor } from "./scoring";
 import { course } from "./test-courses";
 
@@ -74,4 +75,25 @@ test("mistyped saved progress is rejected, not silently reset", () => {
   expect(() => parseProgress('{"xp":"12"}')).toThrow("xp is not a number");
   expect(() => parseProgress('{"stars":{"letters/a":"3"}}')).toThrow("letters/a");
   expect(() => parseProgress("[]")).toThrow();
+});
+
+describe("question stats", () => {
+  test("answers are recorded per course and question, and kept when a lesson is recorded", () => {
+    const answered = recordAnswers(emptyProgress, letters, [{ item: itemId("q"), firstTry: true }], 1000);
+    const again = recordAnswers(answered, letters, [{ item: itemId("q"), firstTry: false }], 2000);
+    const finished = recordLesson(again, letters, a, { xp: 10, mistakes: 1 }, "2026-11-01");
+    expect(itemStatsOf(finished, letters)).toEqual(new Map([[itemId("q"), { seen: 2, firstTries: 1, box: 0, lastSeen: 2000 }]]));
+    expect(itemStatsOf(finished, numbers).size).toBe(0);
+  });
+
+  test("progress saved before questions had stats loads with none", () => {
+    expect(parseProgress(JSON.stringify({ xp: 5, stars: {} })).items).toEqual({});
+  });
+
+  test("saved stats read back, and mistyped ones throw", () => {
+    const saved = recordAnswers(emptyProgress, letters, [{ item: itemId("q"), firstTry: true }], 1000);
+    expect(parseProgress(JSON.stringify(saved))).toEqual(saved);
+    const broken = { ...saved, items: { "letters/q": { seen: 1, firstTries: 1, box: "1", lastSeen: 1000 } } };
+    expect(() => parseProgress(JSON.stringify(broken))).toThrow("box of item letters/q is not a number");
+  });
 });

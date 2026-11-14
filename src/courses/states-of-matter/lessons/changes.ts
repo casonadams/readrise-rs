@@ -2,35 +2,40 @@ import { itemId, lessonId, right, wrong } from "../../../core/course";
 import { kai, lily } from "../../../science/classmates";
 import { scienceLesson } from "../../../science/lesson";
 import type { ScienceLesson } from "../types";
+import { heatLesson } from "./heat";
+import { matterLesson } from "./matter";
 
 // Changes of state and conservation of mass. Targets "boiling bubbles are air" and "evaporated water is gone".
 export const changesLesson: ScienceLesson = scienceLesson({
   id: lessonId("changes"),
   title: "Changes",
-  warmUp: [
-    {
-      id: itemId("changes-warm-gas-heated"),
-      prompt: "When you heat a gas, its particles...",
-      choices: [
-        wrong("Get bigger", "Particles stay the same size when heated."),
-        right("Move faster"),
-        wrong("Disappear", "Matter does not disappear when heated."),
-      ],
-      hint: "Remember the jar over the flame.",
-      explanation: "Heat speeds particles up. Their size stays the same.",
-    },
-    {
-      id: itemId("changes-warm-not-matter"),
-      prompt: "Which of these is NOT matter?",
-      choices: [
-        wrong("Steam", "Steam is water as a gas, so it is matter."),
-        right("Heat"),
-        wrong("Ice", "Ice is water as a solid, so it is matter."),
-      ],
-      hint: "Which one has no mass?",
-      explanation: "Heat is energy. Steam and ice are both water.",
-    },
-  ],
+  warmUp: {
+    recalls: [matterLesson, heatLesson],
+    questions: [
+      {
+        id: itemId("changes-warm-gas-heated"),
+        prompt: "When you heat a gas, its particles...",
+        choices: [
+          wrong("Get bigger", "Particles stay the same size when heated."),
+          right("Move faster"),
+          wrong("Disappear", "Matter does not disappear when heated."),
+        ],
+        hint: "Remember the jar over the flame.",
+        explanation: "Heat speeds particles up. Their size stays the same.",
+      },
+      {
+        id: itemId("changes-warm-not-matter"),
+        prompt: "Which of these is NOT matter?",
+        choices: [
+          wrong("Steam", "Steam is water as a gas, so it is matter."),
+          right("Heat"),
+          wrong("Ice", "Ice is water as a solid, so it is matter."),
+        ],
+        hint: "Which one has no mass?",
+        explanation: "Heat is energy. Steam and ice are both water.",
+      },
+    ],
+  },
   predict: {
     question: "Water boils in a pot. What are the bubbles made of?",
     choices: [

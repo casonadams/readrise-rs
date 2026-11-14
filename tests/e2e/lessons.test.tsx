@@ -132,8 +132,27 @@ async function playLesson(viewport: Viewport, index: number): Promise<App> {
   }
   await app.waitFor("label:Back to the path");
   expect(app.storage()["session.v1"]).toBeUndefined();
+  const saved = JSON.parse(app.storage()["progress.v1"]);
+  for (const activity of lesson.activities) {
+    if (activity.kind !== "quiz" || activity.role !== "check") continue;
+    for (const q of activity.questions) expect(saved.items[`${statesOfMatter.id}/${q.id}`]?.seen).toBe(1);
+  }
   return app;
 }
+
+test("a warm-up reviews the earlier questions the learner found hardest", async () => {
+  const [matter, states] = statesOfMatter.lessons;
+  const checks = matter.activities.flatMap((a) => (a.kind === "quiz" && a.role === "check" ? a.questions : []));
+  const box = (b: number) => ({ seen: 2, firstTries: b, box: b, lastSeen: 1000 });
+  const items = { "matter-air": box(0), "matter-atoms": box(4), "matter-h2o-atoms": box(1) };
+  const progress = JSON.parse(progressBefore(statesOfMatter, 1));
+  progress.items = Object.fromEntries(Object.entries(items).map(([id, stats]) => [`${statesOfMatter.id}/${id}`, stats]));
+  const app = await open("../../App.tsx", { reducedMotion: true, clock: {}, storage: { "progress.v1": JSON.stringify(progress) } });
+  await app.press(`label:${states.title}, start here`);
+  const hardest = checks.filter((q) => q.id === "matter-air" || q.id === "matter-h2o-atoms");
+  await playQuiz(app, { kind: "quiz", role: "warmUp", questions: hardest });
+  await app.waitFor(`label:Step 2 of ${states.activities.length}`);
+});
 
 test("a lesson left halfway carries on at the same step", async () => {
   const index = 2;

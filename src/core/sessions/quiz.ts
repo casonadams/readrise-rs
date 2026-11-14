@@ -1,4 +1,5 @@
 import { type ChoiceQuestion, defaultMaxXp, type QuizActivity } from "../course";
+import type { Answer } from "../item-stats";
 import { scoreXp, type Step } from "../scoring";
 
 /** Wrong picks after which a question's hint shows on its own. */
@@ -11,8 +12,8 @@ export interface QuizState {
   readonly hintShown: boolean;
   readonly answered: boolean;
   readonly reasoned: boolean;
-  readonly firstTry: number;
-  readonly recovered: number;
+  /** One per settled question. */
+  readonly answers: readonly Answer[];
   readonly mistakes: number;
 }
 
@@ -23,8 +24,7 @@ export const quizStart: QuizState = {
   hintShown: false,
   answered: false,
   reasoned: false,
-  firstTry: 0,
-  recovered: 0,
+  answers: [],
   mistakes: 0,
 };
 
@@ -37,10 +37,10 @@ export function isSettled(quiz: QuizActivity<unknown>, s: QuizState): boolean {
   return s.answered && (currentQuestion(quiz, s).reason === undefined || s.reasoned);
 }
 
-/** A settled question earns full credit without a miss or a hint, otherwise half. */
-function score(s: QuizState): QuizState {
-  const clean = s.wrong.length === 0 && s.wrongReasons.length === 0 && !s.hintShown;
-  return clean ? { ...s, firstTry: s.firstTry + 1 } : { ...s, recovered: s.recovered + 1 };
+/** A settled question is answered on the first try without a miss or a hint: full credit, otherwise half. */
+function settle(quiz: QuizActivity<unknown>, s: QuizState): QuizState {
+  const firstTry = s.wrong.length === 0 && s.wrongReasons.length === 0 && !s.hintShown;
+  return { ...s, answers: [...s.answers, { item: currentQuestion(quiz, s).id, firstTry }] };
 }
 
 export function showHint(s: QuizState): QuizState {
@@ -52,7 +52,7 @@ export function pickAnswer(quiz: QuizActivity<unknown>, s: QuizState, option: nu
   const question = currentQuestion(quiz, s);
   if (question.choices[option].right) {
     const answered = { ...s, answered: true };
-    return question.reason === undefined ? score(answered) : answered;
+    return question.reason === undefined ? settle(quiz, answered) : answered;
   }
   const wrong = [...s.wrong, option];
   const hintShown = s.hintShown || (wrong.length >= hintAfterMisses && question.hint !== undefined);
@@ -62,7 +62,7 @@ export function pickAnswer(quiz: QuizActivity<unknown>, s: QuizState, option: nu
 export function pickReason(quiz: QuizActivity<unknown>, s: QuizState, option: number): QuizState {
   const reason = currentQuestion(quiz, s).reason;
   if (reason === undefined || !s.answered || s.reasoned || s.wrongReasons.includes(option)) return s;
-  if (reason.choices[option].right) return score({ ...s, reasoned: true });
+  if (reason.choices[option].right) return settle(quiz, { ...s, reasoned: true });
   return { ...s, wrongReasons: [...s.wrongReasons, option], mistakes: s.mistakes + 1 };
 }
 
@@ -70,9 +70,10 @@ export function pickReason(quiz: QuizActivity<unknown>, s: QuizState, option: nu
 export function nextQuestion(quiz: QuizActivity<unknown>, s: QuizState): Step<QuizState> {
   if (!isSettled(quiz, s)) throw new Error("the question is not settled yet");
   if (s.index + 1 === quiz.questions.length) {
-    const xp = scoreXp(s.firstTry, s.recovered, quiz.questions.length, quiz.maxXp ?? defaultMaxXp);
-    return { result: { xp, mistakes: s.mistakes } };
+    const firstTries = s.answers.filter((a) => a.firstTry).length;
+    const xp = scoreXp(firstTries, s.answers.length - firstTries, quiz.questions.length, quiz.maxXp ?? defaultMaxXp);
+    return { result: { xp, mistakes: s.mistakes, answers: s.answers } };
   }
-  const next = { ...quizStart, index: s.index + 1, firstTry: s.firstTry, recovered: s.recovered, mistakes: s.mistakes };
+  const next = { ...quizStart, index: s.index + 1, answers: s.answers, mistakes: s.mistakes };
   return { state: next };
 }

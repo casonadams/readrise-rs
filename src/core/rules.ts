@@ -1,4 +1,5 @@
 import {
+  type Activity,
   type AnyActivity,
   type Choice,
   type ChoiceQuestion,
@@ -60,28 +61,52 @@ function sortIssues(s: SortActivity): string[] {
   return issues;
 }
 
+/** Ids that appear more than once. */
+function repeats<T>(ids: readonly T[]): T[] {
+  return [...new Set(ids)].filter((id) => ids.indexOf(id) !== ids.lastIndexOf(id));
+}
+
+/** Every activity's own rules: its choices, questions and sort items. */
+function activityIssues(a: Activity<unknown, unknown, unknown>): string[] {
+  switch (a.kind) {
+    case "quiz":
+      return a.questions.flatMap(questionIssues);
+    case "predict":
+      return choiceIssues(`"${a.question}"`, a.choices);
+    case "sort":
+      return sortIssues(a);
+    case "whoIsRight":
+      return choiceIssues(`"${a.situation}"`, a.claims.map((c) => c.says));
+    case "explainer":
+      return [];
+  }
+}
+
+/** A warm-up may recall only lessons that come before its own. */
+function recallIssues(course: Course<AnyActivity>, index: number): string[] {
+  const lesson = course.lessons[index];
+  const earlier = new Set(course.lessons.slice(0, index).map((l) => l.id));
+  const recalls = lesson.activities
+    .filter(isCoreActivity)
+    .flatMap((a) => (a.kind === "quiz" ? (a.review?.recalls ?? []) : []));
+  return recalls
+    .filter((id) => !earlier.has(id))
+    .map((id) => `${lesson.id}: its warm-up recalls ${id}, which is not an earlier lesson`);
+}
+
 /**
- * The lesson design rules of AGENTS.md, for any course: the arc
- * (warm-up, one prediction before the first explainer, "Who's right?" last),
- * one right choice wherever the learner picks, and a reason for every wrong
- * one. Empty when the course follows them.
+ * The lesson design rules of AGENTS.md, for any course: the arc (warm-up, one prediction before the first
+ * explainer, "Who's right?" last), warm-ups recalling only earlier lessons, one right choice wherever the learner
+ * picks and a reason for every wrong one, and unique lesson and question ids. Empty when the course follows them.
  */
 export function courseIssues(course: Course<AnyActivity>): string[] {
-  const issues: string[] = [];
-  const ids = course.lessons.map((l) => l.id);
-  if (new Set(ids).size !== ids.length) issues.push(`${course.id}: lesson ids repeat`);
-  const items = courseQuestions(course).map((q) => q.id);
-  for (const id of new Set(items)) {
-    if (items.indexOf(id) !== items.lastIndexOf(id)) issues.push(`${course.id}: question id ${id} repeats`);
-  }
-  course.lessons.forEach((lesson, i) => {
-    issues.push(...arcIssues(lesson.id, i === 0, lesson.activities));
-    for (const a of lesson.activities.filter(isCoreActivity)) {
-      if (a.kind === "quiz") issues.push(...a.questions.flatMap(questionIssues));
-      else if (a.kind === "predict") issues.push(...choiceIssues(`"${a.question}"`, a.choices));
-      else if (a.kind === "sort") issues.push(...sortIssues(a));
-      else if (a.kind === "whoIsRight") issues.push(...choiceIssues(`"${a.situation}"`, a.claims.map((c) => c.says)));
-    }
-  });
-  return issues;
+  return [
+    ...(repeats(course.lessons.map((l) => l.id)).length > 0 ? [`${course.id}: lesson ids repeat`] : []),
+    ...repeats(courseQuestions(course).map((q) => q.id)).map((id) => `${course.id}: question id ${id} repeats`),
+    ...course.lessons.flatMap((lesson, i) => [
+      ...arcIssues(lesson.id, i === 0, lesson.activities),
+      ...recallIssues(course, i),
+      ...lesson.activities.filter(isCoreActivity).flatMap(activityIssues),
+    ]),
+  ];
 }

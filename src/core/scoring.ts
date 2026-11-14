@@ -1,7 +1,10 @@
-/** What an activity reports when the learner finishes it. */
+import type { Answer } from "./item-stats";
+
+/** What an activity reports when the learner finishes it; a quiz adds how each question was answered. */
 export interface ActivityResult {
   readonly xp: number;
   readonly mistakes: number;
+  readonly answers?: readonly Answer[];
 }
 
 /** An activity either goes on with a new state or finishes with its result. */

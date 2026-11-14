@@ -98,10 +98,21 @@ export interface ChoiceQuestion<Visual = never> {
   readonly ordered?: true;
 }
 
+/** What a warm-up reviews: the earlier lessons it recalls and the questions it may ask from them. */
+export interface Review<Visual = never> {
+  readonly recalls: readonly LessonId[];
+  readonly pool: readonly ChoiceQuestion<Visual>[];
+}
+
 export interface QuizActivity<Visual = never> {
   readonly kind: "quiz";
   readonly role: "warmUp" | "check";
   readonly questions: readonly ChoiceQuestion<Visual>[];
+  /**
+   * A warm-up asks its own `questions` until the learner has answered as many of `review.pool`; from then on it
+   * asks the pool questions the learner finds hardest.
+   */
+  readonly review?: Review<Visual>;
   readonly maxXp?: number;
 }
 

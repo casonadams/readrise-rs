@@ -39,6 +39,7 @@ function InRunner<A>(props: { activity: A; render: (activity: A, complete: (r: A
           lesson={lesson}
           session={startSession("harness", 0)}
           renderActivity={props.render}
+          onResult={() => {}}
           onProgress={() => {}}
           onFinish={(r) => result.set(r)}
           onLeave={() => {}}
@@ -154,6 +155,7 @@ function RunnerHarness() {
       <LessonRunner
         lesson={fixtures.steps}
         session={session}
+        onResult={() => {}}
         onProgress={(s) => saved.set(`saved at ${s.index}: ${s.xp} xp, ${s.mistakes} mistakes`)}
         renderActivity={(step, complete) => (
           <View role="button" onPress={() => complete(step.result)} class="p-4">

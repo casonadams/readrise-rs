@@ -74,14 +74,28 @@ describe("quiz", () => {
     expect(isSettled(quiz, pickReason(quiz, wrongReason, 1))).toBe(true);
   });
 
-  test("clean answers earn full XP; a hint or a wrong reason earns half", () => {
+  test("clean answers earn full XP; a hint or a wrong reason earns half and is no first-try answer", () => {
     const clean = stateOf(nextQuestion(quiz, answer(quizStart, 3)));
     const cleanDone = pickReason(quiz, pickAnswer(quiz, clean, 0), 1);
-    expect(resultOf(nextQuestion(quiz, cleanDone))).toEqual({ xp: 20, mistakes: 0 });
+    expect(resultOf(nextQuestion(quiz, cleanDone))).toEqual({
+      xp: 20,
+      mistakes: 0,
+      answers: [
+        { item: "q1", firstTry: true },
+        { item: "q2", firstTry: true },
+      ],
+    });
 
     const hinted = stateOf(nextQuestion(quiz, answer(showHint(quizStart), 3)));
     const missedReason = pickReason(quiz, pickReason(quiz, pickAnswer(quiz, hinted, 0), 0), 1);
-    expect(resultOf(nextQuestion(quiz, missedReason))).toEqual({ xp: 10, mistakes: 1 });
+    expect(resultOf(nextQuestion(quiz, missedReason))).toEqual({
+      xp: 10,
+      mistakes: 1,
+      answers: [
+        { item: "q1", firstTry: false },
+        { item: "q2", firstTry: false },
+      ],
+    });
   });
 });
 

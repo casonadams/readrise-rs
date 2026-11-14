@@ -2,36 +2,40 @@ import { itemId, lessonId, right, wrong } from "../../../core/course";
 import { noah, zoe } from "../../../science/classmates";
 import { scienceLesson } from "../../../science/lesson";
 import type { ScienceLesson } from "../types";
+import { statesLesson } from "./states";
 
 // Temperature as particle speed. Targets "particles expand when heated".
 export const heatLesson: ScienceLesson = scienceLesson({
   id: lessonId("heat"),
   title: "Heat",
-  warmUp: [
-    {
-      id: itemId("heat-warm-slide"),
-      ordered: true,
-      prompt: "In which state do particles slide past each other?",
-      choices: [
-        wrong("Solid", "Solid particles are held in place. They only vibrate."),
-        right("Liquid"),
-        wrong("Gas", "Gas particles fly far apart instead of sliding."),
-      ],
-      hint: "Which one can you pour?",
-      explanation: "Liquid particles touch but slide past each other.",
-    },
-    {
-      id: itemId("heat-warm-between"),
-      prompt: "What is between the particles of a gas?",
-      choices: [
-        wrong("Air", "The particles are the air, so there is no air between them."),
-        right("Empty space"),
-        wrong("Water", "Water would be particles too. Between them is nothing."),
-      ],
-      hint: "Remember the magnifier on the jar of air.",
-      explanation: "Between gas particles there is only empty space.",
-    },
-  ],
+  warmUp: {
+    recalls: [statesLesson],
+    questions: [
+      {
+        id: itemId("heat-warm-slide"),
+        ordered: true,
+        prompt: "In which state do particles slide past each other?",
+        choices: [
+          wrong("Solid", "Solid particles are held in place. They only vibrate."),
+          right("Liquid"),
+          wrong("Gas", "Gas particles fly far apart instead of sliding."),
+        ],
+        hint: "Which one can you pour?",
+        explanation: "Liquid particles touch but slide past each other.",
+      },
+      {
+        id: itemId("heat-warm-between"),
+        prompt: "What is between the particles of a gas?",
+        choices: [
+          wrong("Air", "The particles are the air, so there is no air between them."),
+          right("Empty space"),
+          wrong("Water", "Water would be particles too. Between them is nothing."),
+        ],
+        hint: "Remember the magnifier on the jar of air.",
+        explanation: "Between gas particles there is only empty space.",
+      },
+    ],
+  },
   predict: {
     question: "You heat a sealed jar of gas. What happens to its particles?",
     choices: [

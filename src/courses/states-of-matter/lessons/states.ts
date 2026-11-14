@@ -2,36 +2,40 @@ import { itemId, lessonId, right, wrong } from "../../../core/course";
 import { ava, sam } from "../../../science/classmates";
 import { scienceLesson } from "../../../science/lesson";
 import type { ScienceLesson } from "../types";
+import { matterLesson } from "./matter";
 
 // Solid, liquid, gas as particle arrangements. Targets "air fills the gaps between particles" and
 // "particles are hard or cold like the whole".
 export const statesLesson: ScienceLesson = scienceLesson({
   id: lessonId("states"),
   title: "States",
-  warmUp: [
-    {
-      id: itemId("states-warm-matter"),
-      prompt: "Which of these is matter?",
-      choices: [
-        wrong("Sound", "Sound is energy moving through matter."),
-        right("Air"),
-        wrong("Light", "Light is energy. It has no mass."),
-      ],
-      hint: "Which one tipped the scale?",
-      explanation: "Air has mass and takes up space, so it is matter.",
-    },
-    {
-      id: itemId("states-warm-made-of"),
-      prompt: "What is all matter made of?",
-      choices: [
-        right("Tiny particles called atoms"),
-        wrong("Energy", "Energy is not matter, so matter cannot be made of it."),
-        wrong("Water", "Water is one kind of matter, made of atoms like everything."),
-      ],
-      hint: "Think of the H and O balls.",
-      explanation: "All matter is made of tiny particles called atoms.",
-    },
-  ],
+  warmUp: {
+    recalls: [matterLesson],
+    questions: [
+      {
+        id: itemId("states-warm-matter"),
+        prompt: "Which of these is matter?",
+        choices: [
+          wrong("Sound", "Sound is energy moving through matter."),
+          right("Air"),
+          wrong("Light", "Light is energy. It has no mass."),
+        ],
+        hint: "Which one tipped the scale?",
+        explanation: "Air has mass and takes up space, so it is matter.",
+      },
+      {
+        id: itemId("states-warm-made-of"),
+        prompt: "What is all matter made of?",
+        choices: [
+          right("Tiny particles called atoms"),
+          wrong("Energy", "Energy is not matter, so matter cannot be made of it."),
+          wrong("Water", "Water is one kind of matter, made of atoms like everything."),
+        ],
+        hint: "Think of the H and O balls.",
+        explanation: "All matter is made of tiny particles called atoms.",
+      },
+    ],
+  },
   predict: {
     question: "Imagine zooming into a jar of air until you see its particles. What is between the particles?",
     choices: [

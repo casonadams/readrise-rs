@@ -24,13 +24,15 @@ function Segments(props: { total: number; done: number }) {
 }
 
 /**
- * Plays a lesson's activities in order from `session`, summing their results: `onProgress` gets the session after
- * each activity, `onFinish` the lesson's outcome. Leaving after the first activity asks first.
+ * Plays a lesson's activities in order from `session`, summing their results: `onResult` gets each activity's
+ * result, `onProgress` the session after it, and `onFinish` the lesson's outcome. Leaving after the first
+ * activity asks first.
  */
 export function LessonRunner<A>(props: {
   lesson: Lesson<A>;
   session: LessonSession;
   renderActivity: (activity: A, complete: (result: ActivityResult) => void) => JSX.Element;
+  onResult: (result: ActivityResult) => void;
   onProgress: (session: LessonSession) => void;
   onFinish: (outcome: ActivityResult) => void;
   onLeave: () => void;
@@ -40,6 +42,7 @@ export function LessonRunner<A>(props: {
   let finished = false;
   const complete = (at: number) => (result: ActivityResult) => {
     if (at !== index() || finished) return;
+    props.onResult(result);
     const step = advanceSession(session(), result, props.lesson.activities.length);
     if ("outcome" in step) {
       finished = true;

@@ -58,7 +58,10 @@ Every lesson after the first follows this order. Each step has a reason.
 
 The first lesson of a course skips the warm-up. Exactly one prediction per lesson, before the first explainer.
 Write a science lesson with `scienceLesson({ warmUp, predict, explain, practise, check, debate })`
-(`src/science/lesson.ts`): one slot per step, so it cannot be built out of order. `courseIssues`
+(`src/science/lesson.ts`): one slot per step, so it cannot be built out of order. A warm-up names the earlier
+lessons it `recalls`; once the learner has answered enough of their check questions, it reviews the ones they
+find hardest (lowest Leitner box, `src/core/item-stats.ts`) instead of its own. It may recall only earlier
+lessons. `courseIssues`
 (`src/core/rules.ts`) also checks the arc, and the feedback rules below; each course's test requires it to find
 none.
 

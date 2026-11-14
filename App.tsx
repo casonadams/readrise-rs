@@ -3,7 +3,7 @@ import { createNavStack, NavPage, NavStack } from "nsh/base";
 import { attemptActivities } from "./src/core/attempt";
 import { Catalog } from "./src/core/catalog";
 import type { CourseId, LessonId } from "./src/core/course";
-import { lessonKey, localDay, recordLesson, streakOn } from "./src/core/progress";
+import { itemStatsOf, lessonKey, localDay, recordAnswers, recordLesson, streakOn } from "./src/core/progress";
 import type { ActivityResult } from "./src/core/scoring";
 import { type LessonSession, resumeOrStart } from "./src/core/session";
 import { statesOfMatterPack } from "./src/courses/states-of-matter/pack";
@@ -46,9 +46,16 @@ function LessonPage(props: { courseId: CourseId; lessonId: LessonId }) {
           <If when={session()}>
             {(start) => (
               <LessonRunner
-                lesson={{ ...lesson, activities: attemptActivities(lesson, start().seed) }}
+                lesson={{
+                  ...lesson,
+                  activities: attemptActivities(lesson, start().seed, itemStatsOf(store.progress(), course)),
+                }}
                 session={start()}
                 renderActivity={packs[catalog.courses.indexOf(course)].renderActivity}
+                onResult={(result) => {
+                  if (result.answers === undefined) return;
+                  void store.save(recordAnswers(store.progress(), course, result.answers, Date.now()));
+                }}
                 onProgress={(next) => void sessionStore.save(next)}
                 onFinish={finish}
                 onLeave={() => nav.pop()}
