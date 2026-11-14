@@ -4,6 +4,7 @@ import type { ExperimentProps, RenderExperiment } from "../../../ui/activities/t
 import { SubjectColor } from "../../../ui/kit/theme";
 import { energyAt, waterStateAt } from "../../../science/matter";
 import type { ExperimentId } from "../types";
+import { EvaporationView, evaporatedAt, evaporatedInAWeek } from "./evaporation";
 import { fillCircle, fitStage } from "../../../science/ui/draw";
 import { controlledExperiment, sliderControl, tapControl } from "../../../science/ui/experiment";
 import { ParticleView } from "../../../science/ui/particle-view";
@@ -281,6 +282,11 @@ const experiments: Record<ExperimentId, (props: ExperimentProps) => JSX.Element>
     control: heatSlider("Stove"),
     observed: (heat) => waterStateAt(stoveCelsius(heat)) === "gas",
     View: Stove,
+  }),
+  evaporation: controlledExperiment({
+    control: sliderControl({ label: "Time", low: "\u{1F4C5}", high: "\u{1F5D3}\uFE0F" }),
+    observed: (time) => evaporatedAt(time) === evaporatedInAWeek,
+    View: EvaporationView,
   }),
 };
 

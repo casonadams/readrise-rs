@@ -6,9 +6,9 @@ import { advance, goalReached, heatLabStart } from "./heat-lab";
 import { changeName, energyAt, type MatterState, speedWord, waterStateAt } from "../../science/matter";
 import type { HeatLabActivity } from "./types";
 
-test("the course is open from the start and ordered matter, states, heat, changes", () => {
+test("the course is open from the start and ordered matter, states, heat, changes, evaporation", () => {
   expect(statesOfMatter.requires).toEqual([]);
-  expect(statesOfMatter.lessons.map((l) => l.id)).toEqual(["matter", "states", "heat", "changes"]);
+  expect(statesOfMatter.lessons.map((l) => l.id)).toEqual(["matter", "states", "heat", "changes", "evaporation"]);
   expect(new Catalog([statesOfMatter]).courses).toHaveLength(1);
 });
 
@@ -20,7 +20,7 @@ test("each lesson uses a different experiment", () => {
   const experiments = statesOfMatter.lessons.flatMap((l) =>
     l.activities.flatMap((a) => (a.kind === "predict" ? [a.experiment] : [])),
   );
-  expect(experiments).toEqual(["balloon", "zoom", "heatGas", "stove"]);
+  expect(experiments).toEqual(["balloon", "zoom", "heatGas", "stove", "evaporation"]);
 });
 
 describe("water", () => {

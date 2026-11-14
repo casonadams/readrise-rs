@@ -13,20 +13,25 @@ const settleSteps = 180;
 type Rgb = [number, number, number];
 
 /**
- * Animated particles for `state`; `energy` (0..1) sets how fast they move, and `seed` where they start and how
- * they jostle. The simulation steps on every display frame and a canvas redraws from the frame signal. Under
- * reduced motion it shows one settled frame instead.
+ * Animated particles for `state`; `energy` (0..1) sets how fast they move, `seed` where they start and how
+ * they jostle, and `count` keeps fewer than the full set (liquid or gas only). The simulation steps on every
+ * display frame and a canvas redraws from the frame signal. Under reduced motion it shows one settled frame.
  */
-export function ParticleView(props: { state: MatterState; energy: number; seed?: number }) {
+export function ParticleView(props: { state: MatterState; energy: number; seed?: number; count?: number }) {
   const sim = new ParticleSim({ random: seededRandom(props.seed ?? 1) });
   const frame = signal(0);
   let colour = hexChannels(particleColor(props.state));
   let last = 0;
   let raf = 0;
 
+  const keepCount = () => {
+    if (props.count !== undefined) sim.resize(props.count);
+  };
+
   const tick = (now: number) => {
     const dt = last === 0 ? 0 : Math.min(0.05, (now - last) / 1000);
     last = now;
+    keepCount();
     sim.step(dt, props.state, props.energy);
     const k = 1 - Math.exp(-colourRate * dt);
     const target = hexChannels(particleColor(props.state));
@@ -37,6 +42,7 @@ export function ParticleView(props: { state: MatterState; energy: number; seed?:
 
   effect(() => {
     if (reduceMotion()) {
+      keepCount();
       for (let i = 0; i < settleSteps; i++) sim.step(1 / 60, props.state, props.energy);
       colour = hexChannels(particleColor(props.state));
       untracked(() => frame.update((n) => n + 1));

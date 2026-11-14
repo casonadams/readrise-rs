@@ -4,6 +4,7 @@ import type { RenderScene } from "../../../ui/activities/types";
 import { SubjectColor } from "../../../ui/kit/theme";
 import { changeName, energyAt, type MatterState, speedWord, waterStateAt } from "../../../science/matter";
 import type { HeatStage, SceneSpec } from "../types";
+import { EvaporationView } from "./evaporation";
 import { ParticleView } from "../../../science/ui/particle-view";
 import { dartRound, ink, mixHex, palette, particleColor, stateName, temperatureColor, withAlpha } from "../../../science/ui/palette";
 import { FactPill, Pop } from "../../../science/ui/parts";
@@ -21,8 +22,20 @@ export const renderScene: RenderScene<SceneSpec> = (scene, step) => {
       return <StatesScene step={step} />;
     case "heat":
       return <HeatScene stages={scene.stages} step={step} />;
+    case "evaporation":
+      return <EvaporationScene step={step} />;
   }
 };
+
+/** How far through the week each step of the evaporation explainer shows. */
+const evaporationTimes = [0, 0.3, 0.6, 1];
+
+/** The glass of water from the experiment, a little further on at each step. */
+function EvaporationScene(props: { step: () => number }) {
+  const time = createTween(0);
+  effect(() => time.animateTo(evaporationTimes[props.step()], 2500, easeInOut));
+  return <EvaporationView value={time.value()} />;
+}
 
 const matterStageWidth = 350;
 const matterStageHeight = 365;

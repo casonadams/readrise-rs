@@ -3,7 +3,7 @@ import type { App } from "nsh/test";
 import type { ExperimentId } from "../../src/courses/states-of-matter/types";
 import { viewports } from "../support/viewports";
 
-const experiments: readonly ExperimentId[] = ["balloon", "zoom", "heatGas", "stove"];
+const experiments: readonly ExperimentId[] = ["balloon", "zoom", "heatGas", "stove", "evaporation"];
 
 /** What a learner sees of each experiment at rest, and once it has reported its result. */
 const views: Record<ExperimentId, { readonly before: readonly string[]; readonly after: readonly string[] }> = {
@@ -23,6 +23,10 @@ const views: Record<ExperimentId, { readonly before: readonly string[]; readonly
     before: ["label:Stove", "label:Particles in a liquid", "text:20\u00B0C"],
     after: ["label:Particles in a gas", "text:The water itself is now a gas"],
   },
+  evaporation: {
+    before: ["label:Time", "label:Particles in a gas", "label:Particles in a liquid", "text:In the glass: 30"],
+    after: ["text:In the glass: 20", "text:In the air: 10"],
+  },
 };
 
 /** Slider drags move the value relative to where it is, so keep stepping until the experiment has reported. */
@@ -32,7 +36,7 @@ async function driveUntilObserved(app: App, experiment: ExperimentId, reach: num
     for (let i = 0; i < 4; i++) await app.press("label:Pump");
     return;
   }
-  const slider = { zoom: "label:Zoom", heatGas: "label:Heat", stove: "label:Stove" }[experiment];
+  const slider = { zoom: "label:Zoom", heatGas: "label:Heat", stove: "label:Stove", evaporation: "label:Time" }[experiment];
   for (let i = 0; i < 12 && !observed(); i++) {
     await app.drag(slider, { x: reach });
     await app.wait(250);
@@ -77,6 +81,7 @@ describe("experiments", () => {
   });
 
   const sliders: [string, string][] = [
+    ["evaporation", "label:Time"],
     ["zoom", "label:Zoom"],
     ["heatGas", "label:Heat"],
     ["stove", "label:Stove"],

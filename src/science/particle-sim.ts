@@ -41,25 +41,51 @@ export class ParticleSim {
   private boxHeight = 1;
   private boxWidth = 1;
 
+  private readonly columns: number;
+  private readonly rows: number;
+
   constructor(options: ParticleSimOptions) {
     this.random = options.random;
-    const columns = options.columns ?? 6;
-    const rows = options.rows ?? 5;
-    for (let r = 0; r < rows; r++) {
-      for (let c = 0; c < columns; c++) {
-        const homeX = 0.15 + c * 0.14;
-        const homeDepth = 0.1 + r * 0.1;
-        const angle = this.random() * 2 * Math.PI;
-        this.particles.push({
-          homeX,
-          homeDepth,
-          x: homeX,
-          y: this.height - homeDepth,
-          vx: Math.cos(angle),
-          vy: Math.sin(angle),
-          phase: this.random() * 2 * Math.PI,
-        });
-      }
+    this.columns = options.columns ?? 6;
+    this.rows = options.rows ?? 5;
+    for (let i = 0; i < this.columns * this.rows; i++) {
+      const homeX = 0.15 + (i % this.columns) * 0.14;
+      this.particles.push(this.particle(i, homeX, this.height - this.homeDepth(i), this.random() * 2 * Math.PI));
+    }
+  }
+
+  private homeDepth(index: number): number {
+    return 0.1 + Math.floor(index / this.columns) * 0.1;
+  }
+
+  /** The `index`-th particle, at its lattice site in a solid, starting at `x`, `y` and heading at `angle`. */
+  private particle(index: number, x: number, y: number, angle: number): Particle {
+    return {
+      homeX: 0.15 + (index % this.columns) * 0.14,
+      homeDepth: this.homeDepth(index),
+      x,
+      y,
+      vx: Math.cos(angle),
+      vy: Math.sin(angle),
+      phase: this.random() * 2 * Math.PI,
+    };
+  }
+
+  /**
+   * Keeps `count` liquid or gas particles, at most `columns` x `rows`. They leave from the top, as surface
+   * particles leave a liquid, and arrive at the floor heading up, as vapor rises from water below.
+   */
+  resize(count: number): void {
+    if (count < 0 || count > this.columns * this.rows) throw new RangeError(`count ${count} is out of range`);
+    while (this.particles.length > count) {
+      const top = this.particles.reduce((a, b) => (a.y <= b.y ? a : b));
+      this.particles.splice(this.particles.indexOf(top), 1);
+    }
+    while (this.particles.length < count) {
+      const r = ParticleSim.radius;
+      const x = r + this.random() * (this.width - 2 * r);
+      const angle = -Math.PI / 2 + this.random() - 0.5;
+      this.particles.push(this.particle(this.particles.length, x, this.height - r, angle));
     }
   }
 

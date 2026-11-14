@@ -132,11 +132,11 @@ const heatStages: readonly HeatStage[] = [
 
 export function scene(name: string): SceneSpec {
   if (name === "heat") return { id: "heat", stages: heatStages };
-  if (name === "matter" || name === "waterMolecule" || name === "states") return { id: name };
+  if (name === "matter" || name === "waterMolecule" || name === "states" || name === "evaporation") return { id: name };
   throw new Error(`unknown scene: ${name}`);
 }
 
-const experimentIds: readonly ExperimentId[] = ["balloon", "zoom", "heatGas", "stove"];
+const experimentIds: readonly ExperimentId[] = ["balloon", "zoom", "heatGas", "stove", "evaporation"];
 
 export function experimentId(name: string): ExperimentId {
   const id = experimentIds.find((e) => e === name);

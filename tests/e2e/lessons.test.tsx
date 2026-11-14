@@ -18,6 +18,7 @@ const experimentSteps: Record<ExperimentId, (app: App) => Promise<void>> = {
   zoom: (app) => app.drag("label:Zoom", { x: 400 }),
   heatGas: (app) => app.drag("label:Heat", { x: 400 }),
   stove: (app) => app.drag("label:Stove", { x: 400 }),
+  evaporation: (app) => app.drag("label:Time", { x: 400 }),
 };
 
 const goalButton = () => "label:/^(Goal reached! Next goal|Finish)$/";

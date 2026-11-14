@@ -3,13 +3,15 @@ import { seededRandom } from "../core/random";
 import { type Particle, ParticleSim } from "./particle-sim";
 import type { MatterState } from "./matter";
 
+/** A seeded simulation run for `seconds` of `state`, in a box `height` tall or fitted to a `view` of that size. */
 function settled(
   state: MatterState,
-  options: { energy?: number; seconds?: number; height?: number } = {},
+  options: { energy?: number; seconds?: number; height?: number; view?: { width: number; height: number } } = {},
 ): ParticleSim {
-  const { energy = 0.5, seconds = 4, height = 1 } = options;
+  const { energy = 0.5, seconds = 4, height = 1, view } = options;
   const sim = new ParticleSim({ random: seededRandom(7) });
-  sim.height = height;
+  if (view === undefined) sim.height = height;
+  else sim.fit(view.width, view.height);
   for (let i = 0; i < seconds * 60; i++) sim.step(1 / 60, state, energy);
   return sim;
 }
@@ -147,12 +149,7 @@ describe("particle sim", () => {
   });
 
   describe("in a box wider than the lattice needs", () => {
-    function wide(state: MatterState): ParticleSim {
-      const sim = new ParticleSim({ random: seededRandom(7) });
-      sim.fit(400, 200);
-      for (let i = 0; i < 4 * 60; i++) sim.step(1 / 60, state, 0.8);
-      return sim;
-    }
+    const wide = (state: MatterState) => settled(state, { energy: 0.8, view: { width: 400, height: 200 } });
 
     test("fitting keeps the area's shape and the lattice's minimum height", () => {
       const sim = new ParticleSim({ random: seededRandom(7) });
@@ -179,3 +176,31 @@ describe("particle sim", () => {
     });
   });
 });
+
+describe("a particle count", () => {
+
+  test("fewer particles leave from the top, as water evaporates from its surface", () => {
+    const sim = settled("liquid");
+    const topmost = Math.min(...sim.particles.map((p) => p.y));
+    const kept = sim.particles.filter((p) => p.y > topmost);
+    sim.resize(sim.particles.length - 1);
+    expect(sim.particles).toEqual(kept);
+  });
+
+  test("more particles arrive at the floor heading up, as vapor rises from water below", () => {
+    const sim = settled("gas");
+    sim.resize(10);
+    sim.resize(14);
+    const arrived = sim.particles.slice(10);
+    expect(arrived).toHaveLength(4);
+    for (const p of arrived) {
+      expect(Math.abs(p.y - (sim.height - ParticleSim.radius))).toBeLessThan(1e-9);
+      expect(p.vy).toBeLessThan(0);
+    }
+  });
+
+  test("cannot hold more than its lattice", () => {
+    expect(() => settled("gas").resize(31)).toThrow("out of range");
+  });
+});
+

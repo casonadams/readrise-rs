@@ -1,9 +1,8 @@
 import { describe, expect, open, test } from "nsh/test";
 import { openLessonActivity } from "../support/open";
-import type { App } from "nsh/test";
-import { changeName, waterStateAt } from "../../src/science/matter";
 import { statesOfMatter } from "../../src/courses/states-of-matter/course";
-import type { ScienceActivity, SceneSpec } from "../../src/courses/states-of-matter/types";
+import type { ScienceActivity } from "../../src/courses/states-of-matter/types";
+import { expectScene } from "../support/scenes";
 import { viewports } from "../support/viewports";
 
 const explainers = statesOfMatter.lessons.flatMap((lesson, lessonIndex) =>
@@ -11,58 +10,6 @@ const explainers = statesOfMatter.lessons.flatMap((lesson, lessonIndex) =>
     activity.kind === "explainer" ? [{ lesson: lessonIndex, activity: index, explainer: activity }] : [],
   ),
 );
-
-const states = ["solid", "liquid", "gas"] as const;
-
-/** What the scene shows at `step`, by scene. Pop-in parts are checked once the step has settled. */
-async function expectScene(app: App, scene: SceneSpec, step: number): Promise<void> {
-  switch (scene.id) {
-    case "matter":
-      expect(app.shows("text:Matter")).toBe(true);
-      expect(app.shows("text:Has mass")).toBe(true);
-      expect(app.shows("text:Takes up space")).toBe(true);
-      if (step >= 1) for (const thing of ["Rock", "Water", "Air"]) expect(app.shows(`text:${thing}`)).toBe(true);
-      if (step >= 2) {
-        expect(app.shows("text:Energy")).toBe(true);
-        for (const thing of ["Light", "Heat", "Sound"]) expect(app.shows(`text:${thing}`)).toBe(true);
-      }
-      if (step >= 3) {
-        expect(app.shows("text:No mass")).toBe(true);
-        expect(app.shows("text:No space")).toBe(true);
-      }
-      return;
-    case "waterMolecule":
-      if (step >= 2) {
-        expect(app.shows("text:2 hydrogen")).toBe(true);
-        expect(app.shows("text:1 oxygen")).toBe(true);
-      }
-      return;
-    case "states":
-      if (step === 0 || step === states.length + 1) {
-        for (const state of states) expect(app.shows(`label:Particles in a ${state}`)).toBe(true);
-        for (const name of ["Solid", "Liquid", "Gas"]) expect(app.shows(`text:${name}`)).toBe(true);
-      }
-      if (step === states.length + 1) {
-        for (const line of ["Packed tight", "Slide past each other", "Fly far apart"]) {
-          expect(app.shows(`text:${line}`)).toBe(true);
-        }
-      }
-      if (step >= 1 && step <= states.length) {
-        expect(app.shows(`label:Particles in a ${states[step - 1]}`)).toBe(true);
-        expect(app.shows("text:Own shape")).toBe(true);
-        expect(app.shows("text:Own volume")).toBe(true);
-      }
-      return;
-    case "heat": {
-      for (const name of ["Solid", "Liquid", "Gas"]) expect(app.shows(`text:${name}`)).toBe(true);
-      expect(app.shows("label:/^Particles in a (solid|liquid|gas)$/")).toBe(true);
-      const stage = scene.stages[step];
-      const change = changeName(waterStateAt(stage.from), waterStateAt(stage.to));
-      if (change !== null) expect(app.shows(`text:${change}`)).toBe(true);
-      return;
-    }
-  }
-}
 
 for (const viewport of viewports) {
   describe(viewport.name, () => {

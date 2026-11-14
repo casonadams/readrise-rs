@@ -113,7 +113,7 @@ function LeavingExperimentHarness(props: { experiment: ExperimentId }) {
   );
 }
 
-const sceneSteps: Record<SceneSpec["id"], number> = { matter: 4, waterMolecule: 5, states: 5, heat: 3 };
+const sceneSteps: Record<SceneSpec["id"], number> = { matter: 4, waterMolecule: 5, states: 5, heat: 3, evaporation: 4 };
 
 function SceneHarness(props: { scene: SceneSpec }) {
   const step = signal(0);

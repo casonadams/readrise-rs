@@ -1,7 +1,7 @@
 import type { Activity, Lesson } from "../../core/course";
 import type { MatterState } from "../../science/matter";
 
-export type ExperimentId = "balloon" | "zoom" | "heatGas" | "stove";
+export type ExperimentId = "balloon" | "zoom" | "heatGas" | "stove" | "evaporation";
 
 /** Water heated or cooled from `from` to `to` degrees Celsius. */
 export interface HeatStage {
@@ -13,6 +13,7 @@ export type SceneSpec =
   | { readonly id: "matter" }
   | { readonly id: "waterMolecule" }
   | { readonly id: "states" }
+  | { readonly id: "evaporation" }
   | { readonly id: "heat"; readonly stages: readonly HeatStage[] };
 
 /** Particles of one state, moving at `energy` on a 0..1 scale. */

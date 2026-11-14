@@ -42,6 +42,11 @@ const experimentViews: Record<
     after: ["label:Particles in a gas", "text:The water itself is now a gas"],
     drive: (app, reach, done) => dragUntil(app, "label:Stove", reach, done),
   },
+  evaporation: {
+    before: ["label:Time", "text:In the glass: 30", "text:In the air: 0"],
+    after: ["text:In the glass: 20", "text:In the air: 10"],
+    drive: (app, reach, done) => dragUntil(app, "label:Time", reach, done),
+  },
 };
 
 /** Slider drags move the value relative to where it is, so keep stepping until the experiment has reported. */
