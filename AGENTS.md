@@ -1,8 +1,8 @@
-# Readrise agent guide
+# Smart Alex agent guide
 
 Read `README.md` for the layout. This file holds the rules for building and changing lessons and their screens.
-They come from learning-science research and from mistakes already made and fixed in Readrise; follow them unless
-the user asks otherwise.
+They come from learning-science research and from mistakes already made and fixed here and in Readrise, its
+Flutter predecessor; follow them unless the user asks otherwise.
 
 ## Layers and reuse
 

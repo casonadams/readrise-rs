@@ -34,13 +34,16 @@ jobs:
       - uses: jdx/mise-action@v5
       - run: nsh package App.tsx --target web --out site
 
+      # nsh names the folder after the app's display name, which has a space.
       - name: Prepare artifact
-        run: touch site/Readrise/.nojekyll
+        run: |
+          mv site/*/ web
+          touch web/.nojekyll
 
       - uses: actions/configure-pages@v6
       - uses: actions/upload-pages-artifact@v5
         with:
-          path: site/Readrise
+          path: web
 
       - id: deployment
         uses: actions/deploy-pages@v5
