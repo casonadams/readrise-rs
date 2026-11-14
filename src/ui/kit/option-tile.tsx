@@ -1,9 +1,17 @@
 import { Text, View } from "nsh";
+import type { Choice } from "../../core/course";
 import { tint } from "./tint";
 import { feedbackColors, SubjectColor } from "./theme";
 
 /** How a choice looks: still open, picked (no verdict yet), crossed out, marked right, or faded once another choice won. */
 export type OptionState = "open" | "picked" | "correct" | "wrong" | "dimmed";
+
+/** How a choice shows: the right one once settled, a missed pick as wrong, the rest dimmed once settled. */
+export function choiceState(choice: Choice, missed: boolean, settled: boolean): OptionState {
+  if (settled && choice.right) return "correct";
+  if (missed) return "wrong";
+  return settled ? "dimmed" : "open";
+}
 
 /** A lettered answer choice. Only an open choice hears presses. */
 export function OptionTile(props: { letter: string; label: string; state: OptionState; onPress: () => void }) {

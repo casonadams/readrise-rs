@@ -1,5 +1,5 @@
 import { describe, expect, test } from "nsh/test";
-import type { PredictActivity, QuizActivity, SortActivity, WhoIsRightActivity } from "../course";
+import { type PredictActivity, type QuizActivity, right, type SortActivity, type WhoIsRightActivity, wrong } from "../course";
 import { scoreXp, type Step } from "../scoring";
 import { commit, isTesting, observe, predict, predictResult, predictResultText, predictStart } from "./predict";
 import { isSettled, nextQuestion, pickAnswer, pickReason, type QuizState, quizStart, showHint } from "./quiz";
@@ -28,13 +28,17 @@ describe("quiz", () => {
     kind: "quiz",
     role: "check",
     questions: [
-      { prompt: "Q1", options: ["a", "b", "c", "d"], answer: 3, explanation: "e", hint: "h" },
+      {
+        prompt: "Q1",
+        choices: [wrong("a", "f"), wrong("b", "f"), wrong("c", "f"), right("d")],
+        explanation: "e",
+        hint: "h",
+      },
       {
         prompt: "Q2",
-        options: ["a", "b"],
-        answer: 0,
+        choices: [right("a"), wrong("b", "f")],
         explanation: "e",
-        reason: { options: ["r0", "r1"], answer: 1 },
+        reason: { choices: [wrong("r0", "f"), right("r1")] },
       },
     ],
   };
@@ -113,10 +117,11 @@ describe("who's right", () => {
   const w: WhoIsRightActivity = {
     kind: "whoIsRight",
     situation: "S",
-    claims: ["x", "y", "z"].map((says) => ({ kid: { name: says, skin: "#000", hair: "#000" }, says })),
-    answer: 2,
+    claims: [wrong("x", "no"), wrong("y", "no"), right("z")].map((says) => ({
+      kid: { name: says.text, skin: "#000", hair: "#000" },
+      says,
+    })),
     explanation: "E",
-    feedback: { 0: "no", 1: "no" },
   };
 
   test("first pick right earns full XP", () => {
@@ -137,12 +142,10 @@ describe("predict", () => {
   const p: PredictActivity<string> = {
     kind: "predict",
     question: "Q",
-    options: ["bigger", "faster"],
-    answer: 1,
+    choices: [wrong("bigger", "A common idea!"), right("faster")],
     tryIt: "Heat it",
     experiment: "heatGas",
     outcome: "They move faster.",
-    reactions: { 0: "A common idea!" },
   };
 
   test("the experiment runs only between committing and observing", () => {

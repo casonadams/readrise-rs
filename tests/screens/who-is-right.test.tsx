@@ -1,6 +1,7 @@
 import { describe, expect, open, test } from "nsh/test";
 import { openLessonActivity } from "../support/open";
 import type { App } from "nsh/test";
+import { feedbackOf } from "../../src/core/course";
 import { statesOfMatter } from "../../src/courses/states-of-matter/course";
 import type { ScienceActivity } from "../../src/courses/states-of-matter/types";
 import { viewports } from "../support/viewports";
@@ -15,8 +16,6 @@ const whoCases = statesOfMatter.lessons.flatMap((lesson, lessonIndex) =>
   ),
 );
 
-const wrongFallback = "Think about what the particles are doing.";
-
 function expectShown(app: App, selectors: readonly string[]): void {
   expect(selectors.filter((s) => !app.shows(s))).toEqual([]);
 }
@@ -26,7 +25,7 @@ function expectShown(app: App, selectors: readonly string[]): void {
 function claimLabel(who: WhoIsRight, i: number, verdict: "open" | "wrong" | "right" | "dimmed"): string {
   const claim = who.claims[i];
   const suffix = verdict === "wrong" ? ", wrong" : verdict === "right" ? ", right" : "";
-  return `label:${claim.kid.name}: ${claim.says}${suffix}`;
+  return `label:${claim.kid.name}: ${claim.says.text}${suffix}`;
 }
 
 /** A learner tries every wrong classmate first, then picks the one who is right. */
@@ -40,8 +39,9 @@ async function walkWhoIsRight(app: App, who: WhoIsRight): Promise<void> {
     ...who.claims.map((_, i) => claimLabel(who, i, "open")),
   ]);
 
+  const answer = who.claims.findIndex((c) => c.says.right);
   const wrong: number[] = [];
-  for (const i of who.claims.map((_, n) => n).filter((n) => n !== who.answer)) {
+  for (const i of who.claims.map((_, n) => n).filter((n) => n !== answer)) {
     await app.press(claimLabel(who, i, "open"));
     wrong.push(i);
     await app.waitFor(claimLabel(who, i, "wrong"));
@@ -50,17 +50,17 @@ async function walkWhoIsRight(app: App, who: WhoIsRight): Promise<void> {
       ...names,
       ...who.claims.map((_, n) => claimLabel(who, n, wrong.includes(n) ? "wrong" : "open")),
       `text:Not ${name}`,
-      `text:${who.feedback[i] ?? wrongFallback}`,
+      `text:${feedbackOf(who.claims[i].says)}`,
     ]);
   }
 
-  await app.press(claimLabel(who, who.answer, "open"));
-  await app.waitFor(claimLabel(who, who.answer, "right"));
-  const right = who.claims[who.answer].kid.name;
+  await app.press(claimLabel(who, answer, "open"));
+  await app.waitFor(claimLabel(who, answer, "right"));
+  const right = who.claims[answer].kid.name;
   expectShown(app, [
     ...names,
     ...who.claims.map((_, n) => {
-      if (n === who.answer) return claimLabel(who, n, "right");
+      if (n === answer) return claimLabel(who, n, "right");
       return claimLabel(who, n, wrong.includes(n) ? "wrong" : "dimmed");
     }),
     `text:Yes! ${right} is right.`,

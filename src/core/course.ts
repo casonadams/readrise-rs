@@ -22,27 +22,48 @@ export interface Subject {
   readonly color: string;
 }
 
-/** Why an option is wrong, keyed by its index in the options. */
-export type WrongFeedback = Readonly<Record<number, string>>;
+export interface Right {
+  readonly right: true;
+  readonly text: string;
+}
+
+/** A wrong choice always says why it is wrong. */
+export interface Wrong {
+  readonly right: false;
+  readonly text: string;
+  readonly feedback: string;
+}
+
+/** Something the learner can pick: an option, a reason, a prediction or a classmate's claim. */
+export type Choice = Right | Wrong;
+
+export function right(text: string): Right {
+  return { right: true, text };
+}
+
+export function wrong(text: string, feedback: string): Wrong {
+  return { right: false, text, feedback };
+}
+
+/** Why `choice` is wrong; nothing for the right one. */
+export function feedbackOf(choice: Choice): string | undefined {
+  return choice.right ? undefined : choice.feedback;
+}
 
 export interface Reason {
   readonly prompt?: string;
-  readonly options: readonly string[];
-  readonly answer: number;
-  readonly feedback?: WrongFeedback;
+  readonly choices: readonly Choice[];
 }
 
 export interface ChoiceQuestion<Visual = never> {
   readonly prompt: string;
-  readonly options: readonly string[];
-  readonly answer: number;
-  /** Shown once the question is settled; says why it is right. */
-  readonly explanation: string;
+  readonly choices: readonly Choice[];
   /** A nudge offered on request and after `hintAfterMisses` wrong picks. */
   readonly hint?: string;
-  readonly feedback?: WrongFeedback;
   /** Asked once the answer is right, before the explanation. */
   readonly reason?: Reason;
+  /** Shown once the question is settled; says why it is right. */
+  readonly explanation: string;
   readonly visual?: Visual;
 }
 
@@ -56,16 +77,13 @@ export interface QuizActivity<Visual = never> {
 export interface PredictActivity<Experiment> {
   readonly kind: "predict";
   readonly question: string;
-  readonly options: readonly string[];
-  /** Index of what really happens. */
-  readonly answer: number;
+  /** What might happen; the right one is what really happens. A wrong one's feedback is a word to the learner who predicted it. */
+  readonly choices: readonly Choice[];
   /** What to do in the experiment, e.g. "Pump air into the balloon". */
   readonly tryIt: string;
   readonly experiment: Experiment;
   /** What happened and why, shown after the experiment. */
   readonly outcome: string;
-  /** A word to the learner who predicted a wrong option. */
-  readonly reactions: WrongFeedback;
   readonly xp?: number;
 }
 
@@ -100,18 +118,17 @@ export interface Kid {
   readonly hair: string;
 }
 
+/** What a classmate says; a wrong claim's feedback refutes it. */
 export interface Claim {
   readonly kid: Kid;
-  readonly says: string;
+  readonly says: Choice;
 }
 
 export interface WhoIsRightActivity {
   readonly kind: "whoIsRight";
   readonly situation: string;
   readonly claims: readonly Claim[];
-  readonly answer: number;
   readonly explanation: string;
-  readonly feedback: WrongFeedback;
   readonly maxXp?: number;
 }
 

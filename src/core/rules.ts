@@ -1,12 +1,4 @@
-import type {
-  Activity,
-  ChoiceQuestion,
-  Course,
-  PredictActivity,
-  SortActivity,
-  WhoIsRightActivity,
-  WrongFeedback,
-} from "./course";
+import type { Activity, Choice, ChoiceQuestion, Course, SortActivity } from "./course";
 
 type Kinded = { readonly kind: string };
 type CoreActivity = Activity<unknown, unknown, unknown>;
@@ -15,12 +7,6 @@ const coreKinds: Readonly<Record<string, true>> = { quiz: true, predict: true, e
 
 function isCore(activity: Kinded): activity is CoreActivity {
   return coreKinds[activity.kind] === true;
-}
-
-function missingWrong(feedback: WrongFeedback | undefined, count: number, answer: number): number[] {
-  const missing: number[] = [];
-  for (let i = 0; i < count; i++) if (i !== answer && feedback?.[i] === undefined) missing.push(i);
-  return missing;
 }
 
 function arcIssues(id: string, first: boolean, activities: readonly Kinded[]): string[] {
@@ -39,30 +25,23 @@ function arcIssues(id: string, first: boolean, activities: readonly Kinded[]): s
   return issues;
 }
 
-function questionIssues(q: ChoiceQuestion<unknown>): string[] {
+/** One right choice, no choice twice, and every wrong one says why. */
+function choiceIssues(where: string, choices: readonly Choice[]): string[] {
   const issues: string[] = [];
-  if (new Set(q.options).size !== q.options.length) issues.push(`"${q.prompt}": repeats an option`);
-  if (q.answer < 0 || q.answer >= q.options.length) issues.push(`"${q.prompt}": answer is not an option`);
-  if (q.explanation === "") issues.push(`"${q.prompt}": no explanation`);
-  if (q.hint === undefined) issues.push(`"${q.prompt}": no hint`);
-  const keys = Object.keys(q.feedback ?? {}).map(Number);
-  if (keys.length === 0) issues.push(`"${q.prompt}": no feedback for wrong options`);
-  for (const k of keys) {
-    if (k === q.answer || k < 0 || k >= q.options.length) issues.push(`"${q.prompt}": feedback for option ${k}`);
-  }
-  if (q.reason !== undefined) {
-    for (const i of missingWrong(q.reason.feedback, q.reason.options.length, q.reason.answer)) {
-      issues.push(`"${q.prompt}": wrong reason ${i} is not explained`);
-    }
+  const rights = choices.filter((c) => c.right).length;
+  if (rights !== 1) issues.push(`${where}: has ${rights} right choices, not 1`);
+  if (new Set(choices.map((c) => c.text)).size !== choices.length) issues.push(`${where}: repeats a choice`);
+  for (const c of choices) {
+    if (!c.right && c.feedback.trim() === "") issues.push(`${where}: "${c.text}" does not say why it is wrong`);
   }
   return issues;
 }
 
-function predictIssues(p: PredictActivity<unknown>): string[] {
-  const issues = missingWrong(p.reactions, p.options.length, p.answer).map(
-    (i) => `"${p.question}": no reaction to option ${i}`,
-  );
-  if (p.reactions[p.answer] !== undefined) issues.push(`"${p.question}": reacts to the right prediction`);
+function questionIssues(q: ChoiceQuestion<unknown>): string[] {
+  const issues = choiceIssues(`"${q.prompt}"`, q.choices);
+  if (q.explanation === "") issues.push(`"${q.prompt}": no explanation`);
+  if (q.hint === undefined) issues.push(`"${q.prompt}": no hint`);
+  if (q.reason !== undefined) issues.push(...choiceIssues(`"${q.prompt}" (why)`, q.reason.choices));
   return issues;
 }
 
@@ -77,14 +56,11 @@ function sortIssues(s: SortActivity): string[] {
   return issues;
 }
 
-function whoIsRightIssues(w: WhoIsRightActivity): string[] {
-  return missingWrong(w.feedback, w.claims.length, w.answer).map((i) => `"${w.situation}": claim ${i} is not refuted`);
-}
-
 /**
  * The lesson design rules of AGENTS.md, for any course: the arc
- * (warm-up, one prediction before the first explainer, "Who's right?" last)
- * and feedback for every wrong choice. Empty when the course follows them.
+ * (warm-up, one prediction before the first explainer, "Who's right?" last),
+ * one right choice wherever the learner picks, and a reason for every wrong
+ * one. Empty when the course follows them.
  */
 export function courseIssues(course: Course<Kinded>): string[] {
   const issues: string[] = [];
@@ -94,9 +70,9 @@ export function courseIssues(course: Course<Kinded>): string[] {
     issues.push(...arcIssues(lesson.id, i === 0, lesson.activities));
     for (const a of lesson.activities.filter(isCore)) {
       if (a.kind === "quiz") issues.push(...a.questions.flatMap(questionIssues));
-      else if (a.kind === "predict") issues.push(...predictIssues(a));
+      else if (a.kind === "predict") issues.push(...choiceIssues(`"${a.question}"`, a.choices));
       else if (a.kind === "sort") issues.push(...sortIssues(a));
-      else if (a.kind === "whoIsRight") issues.push(...whoIsRightIssues(a));
+      else if (a.kind === "whoIsRight") issues.push(...choiceIssues(`"${a.situation}"`, a.claims.map((c) => c.says)));
     }
   });
   return issues;

@@ -1,16 +1,15 @@
 import { describe, expect, open, test } from "nsh/test";
 import { openLessonActivity } from "../support/open";
 import type { App } from "nsh/test";
+import type { Choice } from "../../src/core/course";
 import { statesOfMatter } from "../../src/courses/states-of-matter/course";
 import type { ScienceActivity } from "../../src/courses/states-of-matter/types";
 import { activityKinds } from "../../src/ui/kit/theme";
+import { rightOf } from "../support/choices";
 import { viewports } from "../support/viewports";
 
 type Quiz = Extract<ScienceActivity, { kind: "quiz" }>;
 type Question = Quiz["questions"][number];
-
-const wrongFallback = "Not quite. Try another answer.";
-const reasonFallback = "Not quite. Think about the particles.";
 
 const quizzes = statesOfMatter.lessons.flatMap((lesson, lessonIndex) =>
   lesson.activities.flatMap((activity, activityIndex) =>
@@ -42,11 +41,11 @@ function tile(label: string, status: Status): string {
 }
 
 /** Every choice of a multiple-choice set, given the wrong picks so far and whether the right one is chosen. */
-function choiceTiles(options: readonly string[], answer: number, wrong: readonly number[], solved: boolean): string[] {
-  return options.map((label, i) => {
-    if (solved && i === answer) return tile(label, "correct");
-    if (wrong.includes(i)) return tile(label, "wrong");
-    return tile(label, solved ? "dimmed" : "open");
+function choiceTiles(choices: readonly Choice[], wrong: readonly Choice[], solved: boolean): string[] {
+  return choices.map((c) => {
+    if (solved && c.right) return tile(c.text, "correct");
+    if (wrong.includes(c)) return tile(c.text, "wrong");
+    return tile(c.text, solved ? "dimmed" : "open");
   });
 }
 
@@ -57,7 +56,7 @@ async function enterQuestion(app: App, quiz: Quiz, index: number, q: Question): 
     `text:${index + 1} of ${quiz.questions.length}`,
     `text:${q.prompt}`,
     ...(q.visual === undefined ? [] : [`label:Particles in a ${q.visual.particles}`]),
-    ...choiceTiles(q.options, q.answer, [], false),
+    ...choiceTiles(q.choices, [], false),
     ...(q.hint === undefined ? [] : ["text:Need a hint?"]),
   ]);
 }
@@ -67,59 +66,63 @@ async function walkWithMistakes(app: App, quiz: Quiz): Promise<void> {
   for (const [index, q] of quiz.questions.entries()) {
     await enterQuestion(app, quiz, index, q);
 
-    const wrong: number[] = [];
+    const wrong: Choice[] = [];
     let hintOpen = false;
-    for (const i of q.options.map((_, n) => n).filter((n) => n !== q.answer)) {
-      await app.press(`label:${q.options[i]}`);
-      wrong.push(i);
-      await app.waitFor(tile(q.options[i], "wrong"));
+    for (const c of q.choices) {
+      if (c.right) continue;
+      await app.press(`label:${c.text}`);
+      wrong.push(c);
+      await app.waitFor(tile(c.text, "wrong"));
       if (q.hint !== undefined && !hintOpen && wrong.length === 1) {
         await app.press("text:Need a hint?");
         hintOpen = true;
       }
       const hintVisible = q.hint !== undefined && (hintOpen || wrong.length >= 2);
       expectShown(app, [
-        ...choiceTiles(q.options, q.answer, wrong, false),
-        `text:${q.feedback?.[i] ?? wrongFallback}`,
+        ...choiceTiles(q.choices, wrong, false),
+        `text:${c.feedback}`,
         ...(hintVisible && q.hint !== undefined ? [`text:${q.hint}`] : []),
       ]);
     }
 
-    await app.press(`label:${q.options[q.answer]}`);
-    await app.waitFor(tile(q.options[q.answer], "correct"));
+    const answer = rightOf(q.choices);
+    await app.press(`label:${answer.text}`);
+    await app.waitFor(tile(answer.text, "correct"));
     const reason = q.reason;
     if (reason === undefined) {
       expectShown(app, [
-        ...choiceTiles(q.options, q.answer, wrong, true),
+        ...choiceTiles(q.choices, wrong, true),
         "text:You got it!",
         `text:${q.explanation}`,
         "label:Continue",
       ]);
     } else {
       expectShown(app, [
-        ...choiceTiles(q.options, q.answer, wrong, true),
+        ...choiceTiles(q.choices, wrong, true),
         `text:${reason.prompt ?? "Why is that?"}`,
         "text:Right!",
-        ...choiceTiles(reason.options, reason.answer, [], false),
+        ...choiceTiles(reason.choices, [], false),
       ]);
 
-      const wrongReasons: number[] = [];
-      for (const r of reason.options.map((_, n) => n).filter((n) => n !== reason.answer)) {
-        await app.press(`label:${reason.options[r]}`);
+      const wrongReasons: Choice[] = [];
+      for (const r of reason.choices) {
+        if (r.right) continue;
+        await app.press(`label:${r.text}`);
         wrongReasons.push(r);
-        await app.waitFor(tile(reason.options[r], "wrong"));
+        await app.waitFor(tile(r.text, "wrong"));
         expectShown(app, [
-          ...choiceTiles(q.options, q.answer, wrong, true),
-          ...choiceTiles(reason.options, reason.answer, wrongReasons, false),
-          `text:${reason.feedback?.[r] ?? reasonFallback}`,
+          ...choiceTiles(q.choices, wrong, true),
+          ...choiceTiles(reason.choices, wrongReasons, false),
+          `text:${r.feedback}`,
         ]);
       }
 
-      await app.press(`label:${reason.options[reason.answer]}`);
-      await app.waitFor(tile(reason.options[reason.answer], "correct"));
+      const why = rightOf(reason.choices);
+      await app.press(`label:${why.text}`);
+      await app.waitFor(tile(why.text, "correct"));
       expectShown(app, [
-        ...choiceTiles(q.options, q.answer, wrong, true),
-        ...choiceTiles(reason.options, reason.answer, wrongReasons, true),
+        ...choiceTiles(q.choices, wrong, true),
+        ...choiceTiles(reason.choices, wrongReasons, true),
         "text:You got it!",
         `text:${q.explanation}`,
         "label:Continue",
@@ -134,28 +137,25 @@ async function walkFirstTry(app: App, quiz: Quiz): Promise<void> {
   for (const [index, q] of quiz.questions.entries()) {
     await enterQuestion(app, quiz, index, q);
 
-    await app.press(`label:${q.options[q.answer]}`);
-    await app.waitFor(tile(q.options[q.answer], "correct"));
+    const answer = rightOf(q.choices);
+    await app.press(`label:${answer.text}`);
+    await app.waitFor(tile(answer.text, "correct"));
     const reason = q.reason;
     if (reason === undefined) {
-      expectShown(app, [
-        ...choiceTiles(q.options, q.answer, [], true),
-        "text:Correct!",
-        `text:${q.explanation}`,
-        "label:Continue",
-      ]);
+      expectShown(app, [...choiceTiles(q.choices, [], true), "text:Correct!", `text:${q.explanation}`, "label:Continue"]);
     } else {
       expectShown(app, [
-        ...choiceTiles(q.options, q.answer, [], true),
+        ...choiceTiles(q.choices, [], true),
         `text:${reason.prompt ?? "Why is that?"}`,
         "text:Right!",
-        ...choiceTiles(reason.options, reason.answer, [], false),
+        ...choiceTiles(reason.choices, [], false),
       ]);
-      await app.press(`label:${reason.options[reason.answer]}`);
-      await app.waitFor(tile(reason.options[reason.answer], "correct"));
+      const why = rightOf(reason.choices);
+      await app.press(`label:${why.text}`);
+      await app.waitFor(tile(why.text, "correct"));
       expectShown(app, [
-        ...choiceTiles(q.options, q.answer, [], true),
-        ...choiceTiles(reason.options, reason.answer, [], true),
+        ...choiceTiles(q.choices, [], true),
+        ...choiceTiles(reason.choices, [], true),
         "text:Correct!",
         `text:${q.explanation}`,
         "label:Continue",

@@ -1,8 +1,9 @@
 import { describe, expect, open, test } from "nsh/test";
 import type { App } from "nsh/test";
-import type { Course } from "../../src/core/course";
+import type { Choice, Course } from "../../src/core/course";
 import { statesOfMatter } from "../../src/courses/states-of-matter/course";
 import type { ExperimentId, ScienceActivity, ScienceLesson } from "../../src/courses/states-of-matter/types";
+import { rightOf, wrongOf } from "../support/choices";
 import { type Viewport, viewports } from "../support/viewports";
 
 function progressBefore(course: Course<ScienceActivity>, lessonIndex: number): string {
@@ -43,18 +44,18 @@ async function play(app: App, activity: ScienceActivity, reach: number): Promise
   switch (activity.kind) {
     case "quiz":
       for (const q of activity.questions) {
-        await app.press(`label:${q.options[(q.answer + 1) % q.options.length]}`);
+        await app.press(`label:${wrongOf(q.choices).text}`);
         if (app.count("label:Need a hint?") > 0) await app.press("label:Need a hint?");
-        await app.press(`label:${q.options[q.answer]}`);
+        await app.press(`label:${rightOf(q.choices).text}`);
         if (q.reason !== undefined) {
-          await app.press(`label:${q.reason.options[(q.reason.answer + 1) % q.reason.options.length]}`);
-          await app.press(`label:${q.reason.options[q.reason.answer]}`);
+          await app.press(`label:${wrongOf(q.reason.choices).text}`);
+          await app.press(`label:${rightOf(q.reason.choices).text}`);
         }
         await app.press("label:Continue");
       }
       return;
     case "predict":
-      await app.press(`label:${activity.options[(activity.answer + 1) % activity.options.length]}`);
+      await app.press(`label:${wrongOf(activity.choices).text}`);
       await app.press("label:Pretty sure");
       await experimentSteps[activity.experiment](app);
       await app.waitFor("label:Continue", { timeout: 15000 });
@@ -70,9 +71,11 @@ async function play(app: App, activity: ScienceActivity, reach: number): Promise
       await app.press("label:Continue");
       return;
     case "whoIsRight": {
-      const claimLabel = (i: number) => `label:${activity.claims[i].kid.name}: ${activity.claims[i].says}`;
-      await app.press(claimLabel((activity.answer + 1) % activity.claims.length));
-      await app.press(claimLabel(activity.answer));
+      const claimLabel = (says: Choice) =>
+        `label:${activity.claims.find((c) => c.says === says)?.kid.name}: ${says.text}`;
+      const says = activity.claims.map((c) => c.says);
+      await app.press(claimLabel(wrongOf(says)));
+      await app.press(claimLabel(rightOf(says)));
       await app.press("label:Continue");
       return;
     }

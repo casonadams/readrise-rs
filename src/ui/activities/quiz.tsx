@@ -1,5 +1,5 @@
 import { Scroll, signal, Text, View } from "nsh";
-import type { ChoiceQuestion, QuizActivity, Reason } from "../../core/course";
+import { type Choice, feedbackOf, type QuizActivity, type Reason } from "../../core/course";
 import {
   currentQuestion,
   isSettled,
@@ -14,7 +14,7 @@ import { ActivityHeader } from "../kit/activity-header";
 import { AnswerPanel } from "../kit/answer-panel";
 import { FadeIn } from "../kit/fade-in";
 import { FeedbackBanner } from "../kit/feedback-banner";
-import { type OptionState, OptionTile } from "../kit/option-tile";
+import { choiceState, OptionTile } from "../kit/option-tile";
 import { Shake } from "../kit/shake";
 import { StepDots } from "../kit/step-dots";
 import { TextAction } from "../kit/text-action";
@@ -48,29 +48,10 @@ export function QuizView<V>(props: ActivityProps<QuizActivity<V>> & { renderVisu
   };
   const advance = () => apply(nextQuestion(props.activity, state()));
 
-  const answerState = (q: ChoiceQuestion<V>, i: number): OptionState => {
-    const s = state();
-    if (s.answered && i === q.answer) return "correct";
-    if (s.wrong.includes(i)) return "wrong";
-    return s.answered ? "dimmed" : "open";
-  };
-  const reasonState = (r: Reason, i: number): OptionState => {
-    const s = state();
-    if (s.reasoned && i === r.answer) return "correct";
-    if (s.wrongReasons.includes(i)) return "wrong";
-    return s.reasoned ? "dimmed" : "open";
-  };
-  const wrongMessage = (q: ChoiceQuestion<V>) => {
-    const s = state();
-    const last = lastOf(s.wrong);
-    if (s.answered || last === undefined) return undefined;
-    return q.feedback?.[last] ?? "Not quite. Try another answer.";
-  };
-  const wrongReasonMessage = (r: Reason) => {
-    const s = state();
-    const last = lastOf(s.wrongReasons);
-    if (s.reasoned || last === undefined) return undefined;
-    return r.feedback?.[last] ?? "Not quite. Think about the particles.";
+  /** Why the last missed pick among `choices` is wrong, until the question or reason is settled. */
+  const missMessage = (choices: readonly Choice[], picks: readonly number[], settled: boolean) => {
+    const last = lastOf(picks);
+    return settled || last === undefined ? undefined : feedbackOf(choices[last]);
   };
 
   const reasonBlock = (index: number, reason: Reason) => (
@@ -84,12 +65,12 @@ export function QuizView<V>(props: ActivityProps<QuizActivity<V>> & { renderVisu
         </Text>
         <Text class="flex-1 text-lg font-bold">{reason.prompt ?? "Why is that?"}</Text>
       </View>
-      {reason.options.map((label, i) => (
+      {reason.choices.map((choice, i) => (
         <Shake trigger={shakes()[`${index}:r${i}`] ?? 0}>
-          <OptionTile letter={`${i + 1}`} label={label} state={reasonState(reason, i)} onPress={() => pickWhy(i)} />
+          <OptionTile letter={`${i + 1}`} label={choice.text} state={choiceState(choice, state().wrongReasons.includes(i), state().reasoned)} onPress={() => pickWhy(i)} />
         </Shake>
       ))}
-      <If when={wrongReasonMessage(reason)}>{(message) => <FeedbackBanner kind="wrong" message={message()} />}</If>
+      <If when={missMessage(reason.choices, state().wrongReasons, state().reasoned)}>{(message) => <FeedbackBanner kind="wrong" message={message()} />}</If>
     </View>
   );
 
@@ -105,18 +86,18 @@ export function QuizView<V>(props: ActivityProps<QuizActivity<V>> & { renderVisu
           <View class="h-[180px] shrink-0">{renderVisual(visual)}</View>
         ) : undefined}
         <View class="mt-3 gap-2.5">
-          {q.options.map((label, i) => (
+          {q.choices.map((choice, i) => (
             <Shake trigger={shakes()[`${index}:a${i}`] ?? 0}>
               <OptionTile
                 letter={String.fromCharCode(65 + i)}
-                label={label}
-                state={answerState(q, i)}
+                label={choice.text}
+                state={choiceState(choice, state().wrong.includes(i), state().answered)}
                 onPress={() => pick(i)}
               />
             </Shake>
           ))}
         </View>
-        <If when={wrongMessage(q)}>{(message) => <FeedbackBanner kind="wrong" message={message()} />}</If>
+        <If when={missMessage(q.choices, state().wrong, state().answered)}>{(message) => <FeedbackBanner kind="wrong" message={message()} />}</If>
         <If when={hintMessage()}>{(message) => <FeedbackBanner kind="hint" title="Hint" message={message()} />}</If>
         <If when={q.hint !== undefined && !state().answered && !state().hintShown}>
           <TextAction label="Need a hint?" onPress={() => state.set(showHint(state()))} />

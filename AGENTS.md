@@ -62,8 +62,10 @@ to find none.
 - Predictions are never marked as mistakes. Ask "How sure are you?" only on predictions: confident errors are
   corrected best by feedback ([Butterfield & Metcalfe 2006](https://www.columbia.edu/cu/psychology/metcalfe/PDFs/Butterfield_Metcalfe_2006.pdf)).
 - Every wrong choice gets its own feedback saying why it is wrong, not just "try again"
-  ([Shute 2008](https://journals.sagepub.com/doi/abs/10.3102/0034654307313795)): quiz options and reasons
-  (`feedback`), predictions (`reactions`) and claims (`feedback`).
+  ([Shute 2008](https://journals.sagepub.com/doi/abs/10.3102/0034654307313795)). Write every choice as
+  `right(text)` or `wrong(text, feedback)`: quiz options, reasons, predictions (the feedback is the reaction) and
+  claims (`{ kid, says: wrong(...) }`). A wrong choice without feedback does not compile; `courseIssues` checks
+  there is exactly one right choice.
 - Hints nudge without giving the answer away. Quiz hints appear on request and on their own after two misses;
   using one makes the question worth half.
 

@@ -1,11 +1,11 @@
 import { Scroll, signal, Text, View } from "nsh";
-import type { Claim, WhoIsRightActivity } from "../../core/course";
+import { type Claim, feedbackOf, type WhoIsRightActivity } from "../../core/course";
 import { pickClaim, type WhoIsRightState, whoIsRightResult, whoIsRightStart } from "../../core/sessions/who-is-right";
 import { ActivityHeader } from "../kit/activity-header";
 import { AnswerPanel } from "../kit/answer-panel";
 import { FeedbackBanner } from "../kit/feedback-banner";
 import { KidAvatar } from "../kit/kid-avatar";
-import type { OptionState } from "../kit/option-tile";
+import { choiceState, type OptionState } from "../kit/option-tile";
 import { Shake } from "../kit/shake";
 import { tint } from "../kit/tint";
 import { feedbackColors } from "../kit/theme";
@@ -34,12 +34,6 @@ export function WhoIsRightView(props: ActivityProps<WhoIsRightActivity>) {
     props.complete(whoIsRightResult(activity, state()));
   };
 
-  const stateOf = (i: number): OptionState => {
-    const s = state();
-    if (s.solved && i === activity.answer) return "correct";
-    if (s.wrong.includes(i)) return "wrong";
-    return s.solved ? "dimmed" : "open";
-  };
   const lastWrongIndex = () => {
     const wrong = state().wrong;
     return wrong[wrong.length - 1];
@@ -53,20 +47,20 @@ export function WhoIsRightView(props: ActivityProps<WhoIsRightActivity>) {
       <Scroll class="-mx-5 flex-1" contentClass="gap-3.5 px-5 pb-2">
         {activity.claims.map((claim, i) => (
           <Shake trigger={shakes()[i] ?? 0}>
-            <ClaimCard claim={claim} state={stateOf(i)} avatarOnRight={i % 2 === 1} onPress={() => pick(i)} />
+            <ClaimCard claim={claim} state={choiceState(claim.says, state().wrong.includes(i), state().solved)} avatarOnRight={i % 2 === 1} onPress={() => pick(i)} />
           </Shake>
         ))}
         <If when={!state().solved && lastWrongIndex() !== undefined}>
           <FeedbackBanner
             kind="wrong"
             title={`Not ${activity.claims[lastWrongIndex() ?? 0].kid.name}`}
-            message={activity.feedback[lastWrongIndex() ?? 0] ?? "Think about what the particles are doing."}
+            message={feedbackOf(activity.claims[lastWrongIndex() ?? 0].says) ?? ""}
           />
         </If>
       </Scroll>
       <If when={state().solved}>
         <AnswerPanel
-          title={`Yes! ${activity.claims[activity.answer].kid.name} is right.`}
+          title={`Yes! ${activity.claims.find((c) => c.says.right)?.kid.name ?? ""} is right.`}
           explanation={activity.explanation}
           onContinue={finish}
         />
@@ -97,7 +91,7 @@ function ClaimCard(props: { claim: Claim; state: OptionState; avatarOnRight: boo
   const bubble = (
     <View
       role="button"
-      accessibilityLabel={`${props.claim.kid.name}: ${props.claim.says}${suffix()}`}
+      accessibilityLabel={`${props.claim.kid.name}: ${props.claim.says.text}${suffix()}`}
       onPress={() => {
         if (props.state === "open") props.onPress();
       }}
@@ -111,7 +105,7 @@ function ClaimCard(props: { claim: Claim; state: OptionState; avatarOnRight: boo
         backgroundColor: marked() ? tint(edge(), 0.1) : undefined,
       }}
     >
-      <Text class="flex-1 text-lg font-semibold leading-snug">{`\u201C${props.claim.says}\u201D`}</Text>
+      <Text class="flex-1 text-lg font-semibold leading-snug">{`\u201C${props.claim.says.text}\u201D`}</Text>
       <If when={marked()}>
         <Text class="text-xl font-bold" style={{ color: edge() }}>
           {props.state === "correct" ? "\u2713" : "\u2715"}

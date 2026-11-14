@@ -50,7 +50,7 @@ export function showHint(s: QuizState): QuizState {
 export function pickAnswer(quiz: QuizActivity<unknown>, s: QuizState, option: number): QuizState {
   if (s.answered || s.wrong.includes(option)) return s;
   const question = currentQuestion(quiz, s);
-  if (option === question.answer) {
+  if (question.choices[option].right) {
     const answered = { ...s, answered: true };
     return question.reason === undefined ? score(answered) : answered;
   }
@@ -62,7 +62,7 @@ export function pickAnswer(quiz: QuizActivity<unknown>, s: QuizState, option: nu
 export function pickReason(quiz: QuizActivity<unknown>, s: QuizState, option: number): QuizState {
   const reason = currentQuestion(quiz, s).reason;
   if (reason === undefined || !s.answered || s.reasoned || s.wrongReasons.includes(option)) return s;
-  if (option === reason.answer) return score({ ...s, reasoned: true });
+  if (reason.choices[option].right) return score({ ...s, reasoned: true });
   return { ...s, wrongReasons: [...s.wrongReasons, option], mistakes: s.mistakes + 1 };
 }
 

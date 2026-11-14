@@ -1,11 +1,13 @@
 import { Text, View } from "nsh";
-import type {
-  ExplainerActivity,
-  Lesson,
-  PredictActivity,
-  QuizActivity,
-  SortActivity,
-  WhoIsRightActivity,
+import {
+  type ExplainerActivity,
+  type Lesson,
+  type PredictActivity,
+  type QuizActivity,
+  right,
+  type SortActivity,
+  type WhoIsRightActivity,
+  wrong,
 } from "../../src/core/course";
 import type { ActivityResult } from "../../src/core/scoring";
 import type { ExperimentId, HeatLabActivity, HeatStage, SceneSpec } from "../../src/courses/states-of-matter/types";
@@ -17,13 +19,19 @@ export const quiz: QuizActivity = {
   questions: [
     {
       prompt: "Which one keeps its shape?",
-      options: ["Steam", "Ice", "Water"],
-      answer: 1,
-      explanation: "Ice keeps its shape.",
+      choices: [
+        wrong("Steam", "Steam is a gas, not a solid."),
+        right("Ice"),
+        wrong("Water", "Water takes the shape of its cup."),
+      ],
       hint: "Think about a cube in your freezer.",
-      feedback: { 0: "Steam is a gas, not a solid." },
+      explanation: "Ice keeps its shape.",
     },
-    { prompt: "Which one flows?", options: ["Rock", "Water"], answer: 1, explanation: "Water flows." },
+    {
+      prompt: "Which one flows?",
+      choices: [wrong("Rock", "A rock keeps its shape."), right("Water")],
+      explanation: "Water flows.",
+    },
   ],
 };
 
@@ -33,14 +41,11 @@ export const quizReason: QuizActivity = {
   questions: [
     {
       prompt: "Is ice a solid?",
-      options: ["Yes", "No"],
-      answer: 0,
-      explanation: "Ice is a solid.",
+      choices: [right("Yes"), wrong("No", "Ice keeps its shape, so it is a solid.")],
       reason: {
-        options: ["It is cold.", "Its particles are packed close and stay put."],
-        answer: 1,
-        feedback: { 0: "Cold alone does not make a solid." },
+        choices: [wrong("It is cold.", "Cold alone does not make a solid."), right("Its particles are packed close and stay put.")],
       },
+      explanation: "Ice is a solid.",
     },
   ],
 };
@@ -60,23 +65,23 @@ export const whoIsRight: WhoIsRightActivity = {
   kind: "whoIsRight",
   situation: "Ice is in a freezer. Does it still have particles?",
   claims: [
-    { kid: { name: "Maya", skin: "#F1C27D", hair: "#3E2723" }, says: "No, it has no particles." },
-    { kid: { name: "Leo", skin: "#8D5524", hair: "#111111" }, says: "Yes, they are still there but slow." },
+    { kid: { name: "Maya", skin: "#F1C27D", hair: "#3E2723" }, says: wrong("No, it has no particles.", "Ice still has particles.") },
+    { kid: { name: "Leo", skin: "#8D5524", hair: "#111111" }, says: right("Yes, they are still there but slow.") },
   ],
-  answer: 1,
   explanation: "Particles keep moving, just slowly.",
-  feedback: { 0: "Ice still has particles." },
 };
 
 export const predict: PredictActivity<string> = {
   kind: "predict",
   question: "What happens to a balloon in cold water?",
-  options: ["It shrinks", "It grows", "Nothing"],
-  answer: 0,
+  choices: [
+    right("It shrinks"),
+    wrong("It grows", "Good thinking about air."),
+    wrong("Nothing", "The air inside changes even though you cannot see it."),
+  ],
   tryIt: "Put the balloon in cold water",
   experiment: "cold",
   outcome: "Cold air takes up less room.",
-  reactions: { 1: "Good thinking about air." },
 };
 
 export const explainer: ExplainerActivity<string> = {

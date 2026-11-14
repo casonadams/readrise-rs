@@ -52,7 +52,10 @@ export function PredictView<E>(props: ActivityProps<PredictActivity<E>> & { rend
     },
     onObserved,
   };
-  const right = () => state().prediction === activity.answer;
+  const right = () => {
+    const prediction = state().prediction;
+    return prediction !== null && activity.choices[prediction].right;
+  };
   const finish = () => {
     if (finished) return;
     finished = true;
@@ -83,14 +86,14 @@ export function PredictView<E>(props: ActivityProps<PredictActivity<E>> & { rend
           {props.renderExperiment(activity.experiment, experiment)}
         </View>
         <If when={isTesting(state())}>
-          <TryIt instruction={activity.tryIt} prediction={activity.options[state().prediction ?? 0]} />
+          <TryIt instruction={activity.tryIt} prediction={activity.choices[state().prediction ?? 0].text} />
         </If>
         <If when={!state().observed && !isTesting(state())}>
           <View class="gap-2">
-            {activity.options.map((label, i) => (
+            {activity.choices.map((choice, i) => (
               <OptionTile
                 letter={String.fromCharCode(65 + i)}
-                label={label}
+                label={choice.text}
                 state={state().prediction === i ? "picked" : "open"}
                 onPress={() => state.set(predict(state(), i))}
               />
@@ -122,7 +125,7 @@ export function PredictView<E>(props: ActivityProps<PredictActivity<E>> & { rend
           <AnswerPanel
             title={predictionTitle(right(), state().confidence ?? confidences[0])}
             explanation={predictResultText(activity, state())}
-            lead={right() ? undefined : <AnswerLine text={activity.options[activity.answer]} />}
+            lead={right() ? undefined : <AnswerLine text={activity.choices.find((c) => c.right)?.text ?? ""} />}
             color={right() ? feedbackColors.correct : predictColor}
             icon={right() ? "\u2713" : "\u2728"}
             onContinue={finish}

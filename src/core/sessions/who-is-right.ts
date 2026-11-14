@@ -10,7 +10,7 @@ export const whoIsRightStart: WhoIsRightState = { wrong: [], solved: false };
 
 export function pickClaim(activity: WhoIsRightActivity, s: WhoIsRightState, claim: number): WhoIsRightState {
   if (s.solved || s.wrong.includes(claim)) return s;
-  return claim === activity.answer ? { ...s, solved: true } : { ...s, wrong: [...s.wrong, claim] };
+  return activity.claims[claim].says.right ? { ...s, solved: true } : { ...s, wrong: [...s.wrong, claim] };
 }
 
 export function whoIsRightResult(activity: WhoIsRightActivity, s: WhoIsRightState): ActivityResult {

@@ -1,4 +1,4 @@
-import { defaultPredictXp, type PredictActivity } from "../course";
+import { defaultPredictXp, feedbackOf, type PredictActivity } from "../course";
 import type { ActivityResult } from "../scoring";
 
 /** How sure the learner is, asked before the reveal: confident errors are corrected best by feedback. */
@@ -30,9 +30,9 @@ export function observe(s: PredictState): PredictState {
   return isTesting(s) ? { ...s, observed: true } : s;
 }
 
-/** The reaction to the learner's prediction, then what really happens. */
+/** The reaction to a wrong prediction, then what really happens. */
 export function predictResultText(activity: PredictActivity<unknown>, s: PredictState): string {
-  const reaction = s.prediction === null ? undefined : activity.reactions[s.prediction];
+  const reaction = s.prediction === null ? undefined : feedbackOf(activity.choices[s.prediction]);
   return reaction === undefined ? activity.outcome : `${reaction} ${activity.outcome}`;
 }
 

@@ -6,6 +6,7 @@ import { type Confidence, confidences, predictResult, predictResultText } from "
 import { statesOfMatter } from "../../src/courses/states-of-matter/course";
 import type { ExperimentId, ScienceActivity } from "../../src/courses/states-of-matter/types";
 import { predictionTitle } from "../../src/ui/activities/predict";
+import { rightOf } from "../support/choices";
 import { viewports } from "../support/viewports";
 
 type Predict = PredictActivity<ExperimentId>;
@@ -60,17 +61,18 @@ const predicts = statesOfMatter.lessons.flatMap((lesson, lessonIndex) =>
 /** One whole prediction: pick, commit to a confidence, run the experiment, read the result, continue. */
 async function walkPredict(app: App, p: Predict, pick: number, confidence: Confidence, dragReach: number): Promise<void> {
   const view = experimentViews[p.experiment];
-  const chosen = p.options[pick];
-  const right = pick === p.answer;
+  const texts = p.choices.map((c) => c.text);
+  const chosen = texts[pick];
+  const right = p.choices[pick].right;
 
   expect(app.shows(`text:${p.question}`)).toBe(true);
-  for (const option of p.options) expect(app.shows(`label:${option}`)).toBe(true);
+  for (const option of texts) expect(app.shows(`label:${option}`)).toBe(true);
   for (const selector of view.before) expect(app.shows(selector)).toBe(true);
   expect(app.count("text:How sure are you?")).toBe(0);
 
   await app.press(`label:${chosen}`);
   expect(app.shows(`label:${chosen}, your pick`)).toBe(true);
-  for (const option of p.options) {
+  for (const option of texts) {
     if (option !== chosen) expect(app.shows(`label:${option}`)).toBe(true);
   }
   expect(app.shows("text:How sure are you?")).toBe(true);
@@ -79,7 +81,7 @@ async function walkPredict(app: App, p: Predict, pick: number, confidence: Confi
   await app.press(`label:${confidence}`);
   expect(app.shows(`text:${p.tryIt}`)).toBe(true);
   expect(app.shows(`text:You predicted: ${chosen}`)).toBe(true);
-  for (const option of p.options) expect(app.count(`label:${option}`)).toBe(0);
+  for (const option of texts) expect(app.count(`label:${option}`)).toBe(0);
   for (const selector of view.before) expect(app.shows(selector)).toBe(true);
 
   await view.drive(app, dragReach, () => app.count("label:Continue") > 0);
@@ -87,7 +89,7 @@ async function walkPredict(app: App, p: Predict, pick: number, confidence: Confi
 
   expect(app.shows(`text:${predictionTitle(right, confidence)}`)).toBe(true);
   expect(app.shows(`text:${predictResultText(p, { prediction: pick, confidence, observed: true })}`)).toBe(true);
-  if (!right) expect(app.shows(`text:${p.options[p.answer]}`)).toBe(true);
+  if (!right) expect(app.shows(`text:${rightOf(p.choices).text}`)).toBe(true);
   for (const selector of view.after) expect(app.shows(selector)).toBe(true);
   expect(app.shows("label:Continue")).toBe(true);
 
@@ -118,7 +120,7 @@ for (const viewport of viewports) {
   describe(viewport.name, () => {
     for (const { lesson, activity, predict } of predicts) {
       const title = statesOfMatter.lessons[lesson].title;
-      const wrong = (predict.answer + 1) % predict.options.length;
+      const wrong = predict.choices.findIndex((c) => !c.right);
       const dragReach = viewport.width / 2 - 10;
 
       test(
@@ -134,7 +136,7 @@ for (const viewport of viewports) {
         `${title}: a called prediction shows the result without the right-answer line`,
         async () => {
           const app = await openLessonActivity(viewport, lesson, activity);
-          await walkPredict(app, predict, predict.answer, "Totally sure", dragReach);
+          await walkPredict(app, predict, predict.choices.findIndex((c) => c.right), "Totally sure", dragReach);
         },
         90000,
       );
