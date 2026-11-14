@@ -65,6 +65,17 @@ describe("experiments", () => {
     expect(app.texts()).toContain("Observed 1");
   });
 
+  test("an experiment left while its result settles never reports", async () => {
+    const app = await open("../support/harness.tsx", {
+      host: { params: { screen: "experiment-leaving", experiment: "balloon" } },
+      clock: {},
+    });
+    for (let i = 0; i < 4; i++) await app.press("label:Pump");
+    await app.press("label:Leave");
+    await app.wait(3000);
+    expect(app.texts()).toContain("Observed 0");
+  });
+
   const sliders: [string, string][] = [
     ["zoom", "label:Zoom"],
     ["heatGas", "label:Heat"],

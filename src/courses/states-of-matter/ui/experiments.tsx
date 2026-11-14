@@ -1,48 +1,27 @@
-import { type CanvasRenderingContext2D, Canvas, cleanup, effect, signal, Text, View } from "nsh";
+import { type CanvasRenderingContext2D, Canvas, effect, signal, Text, View } from "nsh";
+import type { JSX } from "nsh/jsx-runtime";
 import type { ExperimentProps, RenderExperiment } from "../../../ui/activities/types";
 import { SubjectColor } from "../../../ui/kit/theme";
-import { PrimaryButton } from "../../../ui/kit/button";
 import { energyAt, waterStateAt } from "../../../science/matter";
 import type { ExperimentId } from "../types";
 import { fillCircle, fitStage } from "../../../science/ui/draw";
+import { controlledExperiment, sliderControl, tapControl } from "../../../science/ui/experiment";
 import { ParticleView } from "../../../science/ui/particle-view";
 import { dartRound, ink, mixHex, palette } from "../../../science/ui/palette";
-import { ExperimentSlider, FactPill, Pop } from "../../../science/ui/parts";
+import { FactPill, Pop } from "../../../science/ui/parts";
 import { createTween, easeIn, easeOutBack, elasticOut } from "../../../science/ui/tween";
 
-/** The experiment for `experiment`. Each one's controls do nothing until `active`, and it reports `onObserved` once. */
-export const renderExperiment: RenderExperiment<ExperimentId> = (experiment, props) => {
-  switch (experiment) {
-    case "balloon":
-      return <Balloon active={props.active} onObserved={props.onObserved} />;
-    case "zoom":
-      return <Zoom active={props.active} onObserved={props.onObserved} />;
-    case "heatGas":
-      return <HeatGas active={props.active} onObserved={props.onObserved} />;
-    case "stove":
-      return <Stove active={props.active} onObserved={props.onObserved} />;
-  }
-};
+const pumpsToFill = 4;
 
 /** Two identical empty balloons balance. Each pump of air fills the right one: it grows, and the scale tips. */
-function Balloon(props: ExperimentProps) {
-  const pumpsToFill = 4;
-  const pumps = signal(0);
+function Balloon(props: { value: number }) {
   const air = createTween(0);
   const tilt = createTween(0);
-  let settle = 0;
-  cleanup(() => clearTimeout(settle));
   effect(() => {
-    const target = pumps() / pumpsToFill;
+    const target = props.value / pumpsToFill;
     air.animateTo(target, 600, easeOutBack);
     tilt.animateTo(target * balanceMaxTilt, 1200, elasticOut);
   });
-  const full = () => pumps() === pumpsToFill;
-  const pump = () => {
-    if (!props.active || full()) return;
-    pumps.update((n) => n + 1);
-    if (full()) settle = setTimeout(props.onObserved, 1400);
-  };
   return (
     <View style={{ flex: 1, gap: 8 }}>
       <View style={{ flex: 1 }}>
@@ -52,7 +31,7 @@ function Balloon(props: ExperimentProps) {
           draw={(cx, { width, height }) => drawBalance(cx, width, height, air.value(), tilt.value())}
         />
       </View>
-      {full() ? (
+      <If when={props.value === pumpsToFill}>
         <View style={{ flexDirection: "row", flexWrap: "wrap", justifyContent: "center", gap: 8 }}>
           <Pop visible={true}>
             <FactPill label="Takes up space" icon={"\u{1F4E6}"} />
@@ -61,25 +40,7 @@ function Balloon(props: ExperimentProps) {
             <FactPill label="Has mass" icon={"\u2696\uFE0F"} />
           </Pop>
         </View>
-      ) : (
-        <View style={{ gap: 10 }}>
-          <View style={{ flexDirection: "row", justifyContent: "center", gap: 6 }}>
-            {Array.from({ length: pumpsToFill }, (_, i) => (
-              <View
-                style={{
-                  width: 12,
-                  height: 12,
-                  borderRadius: 6,
-                  backgroundColor: i < pumps() ? palette.hot : ink.faint(),
-                  transitionProperty: "backgroundColor",
-                  transitionDuration: 200,
-                }}
-              />
-            ))}
-          </View>
-          <PrimaryButton label="Pump" onPress={pump} disabled={!props.active} />
-        </View>
-      )}
+      </If>
     </View>
   );
 }
@@ -184,64 +145,47 @@ function drawBalloon(cx: CanvasRenderingContext2D, base: Point, air: number): vo
 }
 
 /** A jar of air seen through a magnifier. Zooming in grows the lens until it shows the gas particles. */
-function Zoom(props: ExperimentProps) {
-  const zoom = signal(0);
+function Zoom(props: { value: number }) {
   const size = signal({ width: 0, height: 0 });
   const jarOpacity = createTween(1);
-  let reported = false;
-  effect(() => jarOpacity.animateTo(1 - zoom() * 0.8, 200));
-  const zoomedIn = () => zoom() >= 0.98;
-  const set = (value: number) => {
-    zoom.set(value);
-    if (zoomedIn() && !reported) {
-      reported = true;
-      props.onObserved();
-    }
-  };
+  effect(() => jarOpacity.animateTo(1 - props.value * 0.8, 200));
   const lens = () => {
     const room = Math.max(0, Math.min(size().width, size().height) - 12);
     const start = Math.min(64, room);
-    return start + (room - start) * easeIn(zoom());
+    return start + (room - start) * easeIn(props.value);
   };
   return (
-    <View style={{ flex: 1 }}>
-      <View
-        style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
-        onLayout={({ bounds }) => size.set({ width: bounds.size.width, height: bounds.size.height })}
-      >
-        <Canvas
-          style={{ position: "absolute", left: 0, top: 0, right: 0, bottom: 0 }}
-          accessibilityLabel="A jar of air"
-          draw={(cx, { width, height }) => drawJar(cx, width, height, jarOpacity.value(), zoom() < 0.05)}
-        />
-        <View
-          style={{
-            width: lens(),
-            height: lens(),
-            borderRadius: lens() / 2,
-            borderWidth: 5,
-            borderColor: SubjectColor(),
-            overflow: "hidden",
-          }}
-        >
-          <ParticleView state="gas" energy={0.4} />
-        </View>
-        <View style={{ position: "absolute", bottom: 8, left: 0, right: 0, alignItems: "center" }}>
-          <Pop visible={zoomedIn()}>
-            <FactPill label="Between particles: nothing at all" icon={"\u25A2"} color={palette.purple} />
-          </Pop>
-        </View>
-      </View>
-      <ExperimentSlider
-        value={zoom()}
-        onChange={props.active ? set : undefined}
-        label="Zoom"
-        low={"\u{1F50D}"}
-        high={"\u{1F50E}"}
+    <View
+      style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
+      onLayout={({ bounds }) => size.set({ width: bounds.size.width, height: bounds.size.height })}
+    >
+      <Canvas
+        style={{ position: "absolute", left: 0, top: 0, right: 0, bottom: 0 }}
+        accessibilityLabel="A jar of air"
+        draw={(cx, { width, height }) => drawJar(cx, width, height, jarOpacity.value(), props.value < 0.05)}
       />
+      <View
+        style={{
+          width: lens(),
+          height: lens(),
+          borderRadius: lens() / 2,
+          borderWidth: 5,
+          borderColor: SubjectColor(),
+          overflow: "hidden",
+        }}
+      >
+        <ParticleView state="gas" energy={0.4} />
+      </View>
+      <View style={{ position: "absolute", bottom: 8, left: 0, right: 0, alignItems: "center" }}>
+        <Pop visible={zoomedIn(props.value)}>
+          <FactPill label="Between particles: nothing at all" icon={"\u25A2"} color={palette.purple} />
+        </Pop>
+      </View>
     </View>
   );
 }
+
+const zoomedIn = (zoom: number) => zoom >= 0.98;
 
 function drawJar(cx: CanvasRenderingContext2D, width: number, height: number, opacity: number, label: boolean): void {
   const jarWidth = width * 0.62;
@@ -271,17 +215,8 @@ function drawJar(cx: CanvasRenderingContext2D, width: number, height: number, op
 }
 
 /** A sealed jar of gas over a flame. Turning up the heat speeds the particles up while their size stays the same. */
-function HeatGas(props: ExperimentProps) {
-  const heat = signal(0);
-  let reported = false;
-  const energy = () => 0.05 + 0.95 * heat();
-  const set = (value: number) => {
-    heat.set(value);
-    if (value >= 0.98 && !reported) {
-      reported = true;
-      props.onObserved();
-    }
-  };
+function HeatGas(props: { value: number }) {
+  const energy = () => 0.05 + 0.95 * props.value;
   return (
     <View style={{ flex: 1, gap: 10 }}>
       <View style={{ flex: 1 }}>
@@ -291,62 +226,62 @@ function HeatGas(props: ExperimentProps) {
         <FactPill
           label={`Speed: ${energy() < 0.35 ? "Slow" : energy() < 0.7 ? "Medium" : "Fast"}`}
           icon={"\u26A1"}
-          color={mixHex(palette.cold, palette.hot, heat())}
+          color={mixHex(palette.cold, palette.hot, props.value)}
         />
         <FactPill label="Particle size: same" icon={"\u25CF"} />
       </View>
-      <ExperimentSlider
-        value={heat()}
-        onChange={props.active ? set : undefined}
-        label="Heat"
-        low={"\u2744\uFE0F"}
-        high={"\u{1F525}"}
-        color={palette.flame}
-      />
     </View>
   );
 }
 
 const stoveStart = 20;
 const stoveEnd = 110;
+const stoveCelsius = (heat: number) => stoveStart + (stoveEnd - stoveStart) * heat;
 
 /** A pot of water on a stove. Turning it up past 100 C boils the water: the particles themselves fly off as a gas. */
-function Stove(props: ExperimentProps) {
-  const heat = signal(0);
-  let reported = false;
-  const celsius = () => stoveStart + (stoveEnd - stoveStart) * heat();
-  const set = (value: number) => {
-    heat.set(value);
-    if (waterStateAt(stoveStart + (stoveEnd - stoveStart) * value) === "gas" && !reported) {
-      reported = true;
-      props.onObserved();
-    }
-  };
+function Stove(props: { value: number }) {
+  const celsius = () => stoveCelsius(props.value);
   return (
-    <View style={{ flex: 1, gap: 10 }}>
-      <View style={{ flex: 1 }}>
-        <View style={{ position: "absolute", left: 0, top: 0, right: 0, bottom: 0 }}>
-          <ParticleView state={waterStateAt(celsius())} energy={energyAt(celsius())} />
-        </View>
-        <View style={{ position: "absolute", left: 12, top: 8 }}>
-          <Text style={{ fontSize: 24, fontWeight: "600", color: mixHex(palette.cold, palette.hot, heat()) }}>
-            {`${dartRound(celsius())}\u00B0C`}
-          </Text>
-        </View>
-        <View style={{ position: "absolute", bottom: 8, left: 0, right: 0, alignItems: "center" }}>
-          <Pop visible={waterStateAt(celsius()) === "gas"}>
-            <FactPill label="The water itself is now a gas" icon={"\u{1F4A7}"} color={palette.purple} />
-          </Pop>
-        </View>
+    <View style={{ flex: 1 }}>
+      <View style={{ position: "absolute", left: 0, top: 0, right: 0, bottom: 0 }}>
+        <ParticleView state={waterStateAt(celsius())} energy={energyAt(celsius())} />
       </View>
-      <ExperimentSlider
-        value={heat()}
-        onChange={props.active ? set : undefined}
-        label="Stove"
-        low={"\u2744\uFE0F"}
-        high={"\u{1F525}"}
-        color={palette.flame}
-      />
+      <View style={{ position: "absolute", left: 12, top: 8 }}>
+        <Text style={{ fontSize: 24, fontWeight: "600", color: mixHex(palette.cold, palette.hot, props.value) }}>
+          {`${dartRound(celsius())}\u00B0C`}
+        </Text>
+      </View>
+      <View style={{ position: "absolute", bottom: 8, left: 0, right: 0, alignItems: "center" }}>
+        <Pop visible={waterStateAt(celsius()) === "gas"}>
+          <FactPill label="The water itself is now a gas" icon={"\u{1F4A7}"} color={palette.purple} />
+        </Pop>
+      </View>
     </View>
   );
 }
+
+const heatSlider = (label: string) =>
+  sliderControl({ label, low: "\u2744\uFE0F", high: "\u{1F525}", color: palette.flame });
+
+/** The course's experiments; each one's control does nothing until `active`, and it reports `onObserved` once. */
+const experiments: Record<ExperimentId, (props: ExperimentProps) => JSX.Element> = {
+  balloon: controlledExperiment({
+    control: tapControl({ label: "Pump", presses: pumpsToFill }),
+    observed: (pumps) => pumps === pumpsToFill,
+    View: Balloon,
+    settle: 1400,
+  }),
+  zoom: controlledExperiment({
+    control: sliderControl({ label: "Zoom", low: "\u{1F50D}", high: "\u{1F50E}" }),
+    observed: zoomedIn,
+    View: Zoom,
+  }),
+  heatGas: controlledExperiment({ control: heatSlider("Heat"), observed: (heat) => heat >= 0.98, View: HeatGas }),
+  stove: controlledExperiment({
+    control: heatSlider("Stove"),
+    observed: (heat) => waterStateAt(stoveCelsius(heat)) === "gas",
+    View: Stove,
+  }),
+};
+
+export const renderExperiment: RenderExperiment<ExperimentId> = (experiment, props) => experiments[experiment](props);

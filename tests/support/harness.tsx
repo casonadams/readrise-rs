@@ -87,6 +87,21 @@ function ExperimentHarness(props: { experiment: ExperimentId; active: boolean })
   );
 }
 
+/** An active experiment the learner can leave: "Leave" takes it off the screen. */
+function LeavingExperimentHarness(props: { experiment: ExperimentId }) {
+  const observed = signal(0);
+  const shown = signal(true);
+  return (
+    <View class="flex-1 p-6">
+      <If when={shown()}>
+        {renderExperiment(props.experiment, { active: true, onObserved: () => observed.update((n) => n + 1) })}
+      </If>
+      <Text>{`Observed ${observed()}`}</Text>
+      <PrimaryButton label="Leave" onPress={() => shown.set(false)} />
+    </View>
+  );
+}
+
 const sceneSteps: Record<SceneSpec["id"], number> = { matter: 4, waterMolecule: 5, states: 5, heat: 3 };
 
 function SceneHarness(props: { scene: SceneSpec }) {
@@ -157,6 +172,8 @@ function screen(): JSX.Element {
       return fixtureActivity(String(params.activity));
     case "experiment":
       return <ExperimentHarness experiment={fixtures.experimentId(String(params.experiment))} active={params.active === true} />;
+    case "experiment-leaving":
+      return <LeavingExperimentHarness experiment={fixtures.experimentId(String(params.experiment))} />;
     case "scene":
       return <SceneHarness scene={fixtures.scene(String(params.scene))} />;
     case "heat-lab":

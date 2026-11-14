@@ -91,7 +91,10 @@ none.
 
 - A scene is a pure function of its step (`RenderScene`) and animates between steps.
 - An experiment gets `active` and `onObserved` (`ExperimentProps`): its controls do nothing until `active`, and
-  it calls `onObserved` exactly once, after the result is visible. One control per experiment.
+  it calls `onObserved` exactly once, after the result is visible. One control per experiment: build it with
+  `controlledExperiment({ control, observed, View, settle })` (`src/science/ui/experiment.tsx`) from a
+  `sliderControl`, a `tapControl` or a new `Control`; `View` is a function of the control's value. List it in the
+  course's `experiments` record, so a missing one does not compile.
 - Keep the evidence on screen after the reveal: the result may cover the choices, never the experiment.
 - Physical behaviour must look right. `ParticleSim` takes the real box shape (`fit(width, height)`) and is drawn
   at one scale on both axes: never stretch a simulation to fit a box. Liquids pool and level out, gases fill the
