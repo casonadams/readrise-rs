@@ -23,6 +23,7 @@ export const palette = {
   hot: "#E53935",
   oxygen: "#E53935",
   hydrogen: "#F5F5F5",
+  sugar: "#FFA000",
   hydrogenInk: "#424242",
   negative: "#C62828",
   positive: "#1565C0",
