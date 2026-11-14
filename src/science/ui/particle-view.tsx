@@ -9,14 +9,39 @@ import { hexChannels, ink, palette, particleColor, withAlpha } from "./palette";
 const colourRate = 8;
 /** Still frames under reduced motion: the sim is run this long so the particles settle before they are drawn. */
 const settleSteps = 180;
+/** While a slider keeps changing it, a still frame settles again at most this often, and once after the last change. */
+const resettleMs = 150;
 
 type Rgb = [number, number, number];
+
+/**
+ * A still frame's scheduler: the first call settles at once, later ones at most every `resettleMs`, and the last
+ * change always gets a settle of its own.
+ */
+function stillFrames(settle: () => void): () => void {
+  let settled = false;
+  let lastSettle = 0;
+  let pending: ReturnType<typeof setTimeout> | undefined;
+  cleanup(() => clearTimeout(pending));
+  const run = () => {
+    pending = undefined;
+    lastSettle = Date.now();
+    settle();
+  };
+  return () => {
+    if (!settled) {
+      settled = true;
+      return run();
+    }
+    if (pending === undefined) pending = setTimeout(run, Math.max(0, lastSettle + resettleMs - Date.now()));
+  };
+}
 
 /**
  * Animated particles for `state`; `energy` (0..1) sets how fast they move, `seed` where they start and how
  * they jostle, and `count` keeps fewer than the full set (liquid or gas only). Sugar: `dissolved` particles move
  * with the water and `undissolved` ones stay in a crystal, drawn as one block. The simulation steps on every
- * display frame and a canvas redraws from the frame signal. Under reduced motion it shows one settled frame.
+ * display frame and a canvas redraws from the frame signal. Under reduced motion it shows a settled still frame.
  */
 export function ParticleView(props: {
   state: MatterState;
@@ -49,12 +74,20 @@ export function ParticleView(props: {
     raf = requestAnimationFrame(tick);
   };
 
+  /** What the still frame shows: reading them in an effect makes a change of any one a reason to settle again. */
+  const inputs = () => [props.state, props.energy, props.count, props.dissolved, props.undissolved];
+  const settle = () => {
+    keepCount();
+    for (let i = 0; i < settleSteps; i++) sim.step(1 / 60, props.state, props.energy);
+    colour = hexChannels(particleColor(props.state));
+    frame.update((n) => n + 1);
+  };
+  const changed = stillFrames(settle);
+
   effect(() => {
     if (reduceMotion()) {
-      keepCount();
-      for (let i = 0; i < settleSteps; i++) sim.step(1 / 60, props.state, props.energy);
-      colour = hexChannels(particleColor(props.state));
-      untracked(() => frame.update((n) => n + 1));
+      inputs();
+      untracked(changed);
       return;
     }
     last = 0;
